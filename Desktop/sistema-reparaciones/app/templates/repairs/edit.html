@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="bi bi-pencil text-primary me-2"></i>
+                        Editar Reparación #{{ repair.id }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Modifica la información de la reparación de {{ repair.client_name }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Info rápida -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                <strong>Ingresado:</strong> {{ repair.entry_date.strftime('%d/%m/%Y') }}
+                                ({{ repair.days_since_entry() }} días)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <small class="text-muted">
+                                <i class="bi bi-flag me-1"></i>
+                                <strong>Prioridad:</strong> 
+                                <span class="badge priority-badge-{{ repair.get_priority_class().split('-')[-1] }}">
+                                    {{ repair.get_priority_label() }}
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                    Información de la Reparación
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Sección: Información del Cliente -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-person me-1"></i>Información del Cliente
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                {{ form.client_name.label(class="form-label") }}
+                                {{ form.client_name(class="form-control" + (" is-invalid" if form.client_name.errors else ""), 
+                                                   placeholder="Nombre completo del cliente") }}
+                                {% if form.client_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.client_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.client_phone.label(class="form-label") }}
+                                {{ form.client_phone(class="form-control" + (" is-invalid" if form.client_phone.errors else ""), 
+                                                     placeholder="(Opcional)") }}
+                                {% if form.client_phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.client_phone.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional, para contacto</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información del Equipo -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-gear me-1"></i>Información del Equipo
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.device_type.label(class="form-label") }}
+                                {{ form.device_type(class="form-control" + (" is-invalid" if form.device_type.errors else ""), 
+                                                    placeholder="TV, Radio, Microondas, etc.") }}
+                                {% if form.device_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.device_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.brand.label(class="form-label") }}
+                                {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else ""), 
+                                              placeholder="Samsung, LG, etc.") }}
+                                {% if form.brand.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.brand.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.model.label(class="form-label") }}
+                                {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else ""), 
+                                              placeholder="Modelo específico") }}
+                                {% if form.model.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.model.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form.serial_number.label(class="form-label") }}
+                                {{ form.serial_number(class="form-control" + (" is-invalid" if form.serial_number.errors else ""), 
+                                                      placeholder="Número de serie (opcional)") }}
+                                {% if form.serial_number.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.serial_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional, ayuda en la identificación</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Problema y Diagnóstico -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-bug me-1"></i>Problema y Diagnóstico
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form.problem_description.label(class="form-label") }}
+                                {{ form.problem_description(class="form-control" + (" is-invalid" if form.problem_description.errors else ""), 
+                                                            rows="4", 
+                                                            placeholder="Describe detalladamente el problema reportado por el cliente...") }}
+                                {% if form.problem_description.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.problem_description.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Mínimo 10 caracteres</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Estado actual: <strong>{{ repair.get_status_display() }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.repair_cost.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.repair_cost(class="form-control" + (" is-invalid" if form.repair_cost.errors else ""), 
+                                                        placeholder="0.00", step="0.01") }}
+                                    {% if form.repair_cost.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.repair_cost.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Costo estimado o final</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información Adicional -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-info-circle me-1"></i>Información Adicional
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.diagnosis_notes.label(class="form-label") }}
+                                {{ form.diagnosis_notes(class="form-control" + (" is-invalid" if form.diagnosis_notes.errors else ""), 
+                                                        rows="4", 
+                                                        placeholder="Notas del diagnóstico y reparación...") }}
+                                {% if form.diagnosis_notes.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.diagnosis_notes.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Observaciones técnicas detalladas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.parts_needed.label(class="form-label") }}
+                                {{ form.parts_needed(class="form-control" + (" is-invalid" if form.parts_needed.errors else ""), 
+                                                     rows="4", 
+                                                     placeholder="Lista de repuestos necesarios o utilizados...") }}
+                                {% if form.parts_needed.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.parts_needed.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Componentes, piezas y costos</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de fechas -->
+                    {% if repair.diagnosis_date or repair.completion_date or repair.delivery_date %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-secondary">
+                                <i class="bi bi-clock-history me-1"></i>Historial de Fechas
+                            </h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted d-block">Ingreso</small>
+                                            <strong>{{ repair.entry_date.strftime('%d/%m/%Y') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if repair.diagnosis_date %}
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted d-block">Diagnóstico</small>
+                                            <strong>{{ repair.diagnosis_date.strftime('%d/%m/%Y') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if repair.completion_date %}
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted d-block">Terminado</small>
+                                            <strong>{{ repair.completion_date.strftime('%d/%m/%Y') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if repair.delivery_date %}
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <small class="text-muted d-block">Entregado</small>
+                                            <strong>{{ repair.delivery_date.strftime('%d/%m/%Y') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Botones -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 flex-wrap">
+                                {{ form.submit(class="btn btn-success btn-lg px-4") }}
+                                <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-info btn-lg px-4">
+                                    <i class="bi bi-eye me-1"></i>Ver Detalles
+                                </a>
+                                <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary btn-lg px-4">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Acciones adicionales -->
+        <div class="card mt-4 bg-light">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-tools text-warning me-2"></i>
+                    Acciones Rápidas
+                </h6>
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="mb-2">
+                            <strong>Cambio de estado:</strong> El estado se actualizará automáticamente según las fechas cuando guardes los cambios.
+                        </p>
+                        <ul class="list-unstyled mb-0">
+                            <li><small><i class="bi bi-info-circle text-info me-1"></i> Si cambias a "Diagnóstico hecho" se registrará la fecha de diagnóstico</small></li>
+                            <li><small><i class="bi bi-info-circle text-info me-1"></i> Si cambias a "Listo para entrega" se registrará la fecha de finalización</small></li>
+                            <li><small><i class="bi bi-info-circle text-info me-1"></i> Si cambias a "Entregado" se registrará la fecha de entrega</small></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        {% if repair.status in ['delivered', 'no_repair'] %}
+                        <button class="btn btn-outline-danger" onclick="confirmDelete()">
+                            <i class="bi bi-trash me-1"></i>Eliminar Reparación
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+{% if repair.status in ['delivered', 'no_repair'] %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta reparación?</p>
+                <div class="alert alert-warning">
+                    <strong>Cliente:</strong> {{ repair.client_name }}<br>
+                    <strong>Equipo:</strong> {{ repair.device_type }} {{ repair.brand }} {{ repair.model }}
+                </div>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('repairs.delete', id=repair.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el primer campo editable
+    const firstInput = document.querySelector('input[name="client_name"]');
+    if (firstInput) {
+        firstInput.select(); // Seleccionar texto para fácil edición
+    }
+    
+    // Validación en tiempo real para el costo
+    const costInput = document.querySelector('input[name="repair_cost"]');
+    if (costInput) {
+        costInput.addEventListener('input', function() {
+            let value = this.value;
+            // Remover caracteres no numéricos excepto punto y coma
+            value = value.replace(/[^0-9.,]/g, '');
+            // Reemplazar coma por punto
+            value = value.replace(',', '.');
+            // Solo permitir un punto decimal
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+        });
+    }
+    
+    // Contador de caracteres para descripción del problema
+    const problemDescription = document.querySelector('textarea[name="problem_description"]');
+    if (problemDescription) {
+        const helpText = problemDescription.nextElementSibling;
+        const originalText = helpText.textContent;
+        
+        function updateCounter() {
+            const length = problemDescription.value.length;
+            const minLength = 10;
+            
+            if (length < minLength) {
+                helpText.textContent = `${originalText} (${length}/mínimo ${minLength})`;
+                helpText.className = 'form-text text-warning';
+            } else {
+                helpText.textContent = `${originalText} (${length} caracteres)`;
+                helpText.className = 'form-text text-success';
+            }
+        }
+        
+        problemDescription.addEventListener('input', updateCounter);
+        updateCounter(); // Inicial
+    }
+    
+    // Alertas de cambio de estado
+    const statusSelect = document.querySelector('select[name="status"]');
+    if (statusSelect) {
+        const originalStatus = statusSelect.value;
+        
+        statusSelect.addEventListener('change', function() {
+            const newStatus = this.value;
+            const statusNames = {
+                'pending_diagnosis': 'Falta diagnóstico',
+                'diagnosed': 'Diagnóstico hecho',
+                'waiting_parts': 'Esperando repuestos', 
+                'ready_for_delivery': 'Listo para entrega',
+                'delivered': 'Entregado',
+                'no_repair': 'Sin reparación'
+            };
+            
+            if (newStatus !== originalStatus) {
+                let message = `Cambiarás el estado a: <strong>${statusNames[newStatus]}</strong>`;
+                
+                if (newStatus === 'diagnosed') {
+                    message += '<br><small class="text-info">Se registrará la fecha de diagnóstico</small>';
+                } else if (newStatus === 'ready_for_delivery') {
+                    message += '<br><small class="text-info">Se registrará la fecha de finalización</small>';
+                } else if (newStatus === 'delivered') {
+                    message += '<br><small class="text-info">Se registrará la fecha de entrega</small>';
+                }
+                
+                // Mostrar tooltip o mensaje
+                this.title = message.replace(/<[^>]*>/g, '');
+            }
+        });
+    }
+});
+
+// Función para confirmar eliminación
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

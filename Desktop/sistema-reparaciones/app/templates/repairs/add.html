@@ -52,6 +52,68 @@
                             </div>
                         </div>
                         
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.client_phone.label(class="form-label") }}
+                                {{ form.client_phone(class="form-control" + (" is-invalid" if form.client_phone.errors else ""), 
+                                                     placeholder="(Opcional)") }}
+                                {% if form.client_phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.client_phone.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional, para contacto</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información del Equipo -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-gear me-1"></i>Información del Equipo
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.device_type.label(class="form-label") }}
+                                {{ form.device_type(class="form-control" + (" is-invalid" if form.device_type.errors else ""), 
+                                                    placeholder="TV, Radio, Microondas, etc.") }}
+                                {% if form.device_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.device_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.brand.label(class="form-label") }}
+                                {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else ""), 
+                                              placeholder="Samsung, LG, etc.") }}
+                                {% if form.brand.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.brand.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.model.label(class="form-label") }}
+                                {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else ""), 
+                                              placeholder="Modelo específico") }}
+                                {% if form.model.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.model.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
                         <div class="col-12">
                             <div class="mb-3">
                                 {{ form.serial_number.label(class="form-label") }}
@@ -288,63 +350,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                {{ form.client_phone.label(class="form-label") }}
-                                {{ form.client_phone(class="form-control" + (" is-invalid" if form.client_phone.errors else ""), 
-                                                     placeholder="(Opcional)") }}
-                                {% if form.client_phone.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.client_phone.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                <div class="form-text">Opcional, para contacto</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección: Información del Equipo -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="border-bottom pb-2 mb-3 text-primary">
-                                <i class="bi bi-gear me-1"></i>Información del Equipo
-                            </h6>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.device_type.label(class="form-label") }}
-                                {{ form.device_type(class="form-control" + (" is-invalid" if form.device_type.errors else ""), 
-                                                    placeholder="TV, Radio, Microondas, etc.") }}
-                                {% if form.device_type.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.device_type.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                {{ form.brand.label(class="form-label") }}
-                                {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else ""), 
-                                              placeholder="Samsung, LG, etc.") }}
-                                {% if form.brand.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.brand.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                {{ form.model.label(class="form-label") }}
-                                {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else ""), 
-                                              placeholder="Modelo específico") }}
-                                {% if form.model.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.model.errors %}{{ error }}{% endfor %}
