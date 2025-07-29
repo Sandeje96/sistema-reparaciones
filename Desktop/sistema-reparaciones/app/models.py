@@ -8,6 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
+import uuid
+import os
 
 class User(UserMixin, db.Model):
     """Modelo de usuario del sistema."""
@@ -122,3 +124,82 @@ class Repair(db.Model):
     
     def __repr__(self):
         return f'<Repair {self.id}: {self.client_name} - {self.device_type}>'
+
+# 🆕 NUEVO MODELO PARA INFORMES TÉCNICOS
+class TechnicalReport(db.Model):
+    """Modelo para informes técnicos de seguros."""
+    
+    __tablename__ = 'technical_reports'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Identificador único para archivos
+    uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    
+    # Información del seguro
+    insurance_company = db.Column(db.String(100), nullable=False)  # Cliente (ej: SANCOR COOP.)
+    insured_company = db.Column(db.String(100), nullable=False)    # Asegurado (ej: OSOL S.R.L)
+    claim_number = db.Column(db.String(50), nullable=False)        # Siniestro
+    incident_date = db.Column(db.Date, nullable=False)             # Fecha del siniestro
+    
+    # Información del equipo
+    device_type = db.Column(db.String(100), nullable=False)        # Objeto (ej: Tv 43'')
+    brand = db.Column(db.String(50), nullable=False)               # Marca
+    model = db.Column(db.String(100), nullable=False)              # Modelo
+    serial_number = db.Column(db.String(100), nullable=True)       # Serie
+    problem_description = db.Column(db.Text, nullable=False)       # Detalles del problema
+    
+    # Diagnóstico técnico
+    technical_diagnosis = db.Column(db.Text, nullable=False)       # Informe técnico detallado
+    diagnosis_price = db.Column(db.Float, nullable=False)          # Precio de diagnóstico
+    repair_price = db.Column(db.Float, nullable=True)              # Precio de reparación
+    
+    # Información del técnico
+    technician_name = db.Column(db.String(100), nullable=False, default='Leonardo A. Acosta')
+    professional_license = db.Column(db.String(20), nullable=False, default='2200')
+    
+    # Archivos de imágenes (máximo 3)
+    image1_filename = db.Column(db.String(255), nullable=True)
+    image2_filename = db.Column(db.String(255), nullable=True)
+    image3_filename = db.Column(db.String(255), nullable=True)
+    
+    # Metadatos
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    creator = db.relationship('User', backref=db.backref('technical_reports', lazy=True))
+    
+    def get_images(self):
+        """Obtener lista de imágenes no vacías."""
+        images = []
+        for i in range(1, 4):
+            filename = getattr(self, f'image{i}_filename')
+            if filename:
+                images.append({
+                    'number': i,
+                    'filename': filename,
+                    'path': f'uploads/informes/{filename}'
+                })
+        return images
+    
+    def get_upload_folder(self):
+        """Obtener carpeta de subida para este informe."""
+        return os.path.join('app', 'static', 'uploads', 'informes')
+    
+    def delete_images(self):
+        """Eliminar archivos de imágenes asociados."""
+        upload_folder = self.get_upload_folder()
+        for i in range(1, 4):
+            filename = getattr(self, f'image{i}_filename')
+            if filename:
+                file_path = os.path.join(upload_folder, filename)
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except OSError:
+                        pass  # Error silencioso si no se puede eliminar
+    
+    def __repr__(self):
+        return f'<TechnicalReport {self.id}: {self.claim_number} - {self.device_type}>'

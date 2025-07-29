@@ -47,6 +47,10 @@ def create_app(config_name='default'):
     from app.repairs import bp as repairs_bp
     app.register_blueprint(repairs_bp, url_prefix='/repairs')
     
+    # 🆕 NUEVO BLUEPRINT DE INFORMES TÉCNICOS
+    from app.informes import bp as informes_bp
+    app.register_blueprint(informes_bp, url_prefix='/informes')
+    
     # Contexto de plantillas globales
     @app.context_processor
     def inject_template_vars():

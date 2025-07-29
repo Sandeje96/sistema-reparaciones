@@ -15,11 +15,24 @@ Werkzeug==2.3.7
 # Variables de entorno
 python-dotenv==1.0.0
 
-# Base de datos
-SQLAlchemy==2.0.21
+# Base de datos - versión compatible con Python 3.13
+SQLAlchemy==2.0.36
 
 # Utilidades
 email-validator==2.0.0
 
 # Para producción
 gunicorn==21.2.0
+
+# 🆕 NUEVAS DEPENDENCIAS PARA INFORMES - VERSIONES COMPATIBLES
+# Generación de PDFs
+reportlab==4.2.2
+
+# Manejo de imágenes - versión compatible con Python 3.13
+Pillow==10.4.0
+
+# Manejo de archivos y fechas
+python-dateutil==2.8.2
+
+# Utilidades adicionales
+uuid==1.30
