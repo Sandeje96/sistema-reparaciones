@@ -16,7 +16,12 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'clave-secreta-por-defecto-cambiar-en-produccion'
     
     # Configuración de base de datos
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///reparaciones.db'
+    # Para Railway, usar DATABASE_URL si está disponible
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
+    
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'sqlite:///reparaciones.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configuración de la aplicación
@@ -42,6 +47,10 @@ class ProductionConfig(Config):
     """Configuración para producción."""
     DEBUG = False
     FLASK_ENV = 'production'
+    
+    # En producción, forzar HTTPS
+    if os.environ.get('RAILWAY_ENVIRONMENT'):
+        PREFERRED_URL_SCHEME = 'https'
 
 class TestingConfig(Config):
     """Configuración para testing."""
@@ -54,5 +63,5 @@ config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig,
-    'default': DevelopmentConfig
+    'default': ProductionConfig if os.environ.get('RAILWAY_ENVIRONMENT') else DevelopmentConfig
 }

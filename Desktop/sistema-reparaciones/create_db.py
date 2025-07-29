@@ -1,32 +1,48 @@
 # create_db.py - Crear este archivo en la raíz del proyecto
 
+import os
 from app import create_app, db
 from app.models import User, Repair
 
-# Crear la aplicación
-app = create_app()
+# Determinar el entorno
+config_name = 'production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'development'
+
+# Crear la aplicación con la configuración apropiada
+app = create_app(config_name)
 
 # Crear las tablas dentro del contexto de la aplicación
 with app.app_context():
     print("🔧 Creando todas las tablas...")
-    db.create_all()
-    print("✅ Tablas creadas exitosamente")
     
-    # Crear usuario administrador
-    admin_exists = User.query.filter_by(username='admin').first()
-    if not admin_exists:
-        admin_user = User(
-            username='admin',
-            is_admin=True
-        )
-        admin_user.set_password('admin123')  # Cambia esta contraseña
+    try:
+        db.create_all()
+        print("✅ Tablas creadas exitosamente")
         
-        db.session.add(admin_user)
-        db.session.commit()
-        print("✅ Usuario administrador creado:")
-        print("   Usuario: admin")
-        print("   Contraseña: admin123")
-    else:
-        print("⚠️ El usuario admin ya existe")
+        # Crear usuario administrador solo si no existe
+        admin_exists = User.query.filter_by(username='admin').first()
+        if not admin_exists:
+            # En producción, usar variables de entorno para credenciales
+            admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+            admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+            
+            admin_user = User(
+                username=admin_username,
+                is_admin=True
+            )
+            admin_user.set_password(admin_password)
+            
+            db.session.add(admin_user)
+            db.session.commit()
+            print(f"✅ Usuario administrador '{admin_username}' creado")
+            
+            if not os.environ.get('RAILWAY_ENVIRONMENT'):
+                print(f"   Usuario: {admin_username}")
+                print(f"   Contraseña: {admin_password}")
+        else:
+            print("⚠️ El usuario admin ya existe")
+            
+        print("🚀 Base de datos lista para usar")
         
-    print("🚀 Base de datos lista para usar")
+    except Exception as e:
+        print(f"❌ Error configurando base de datos: {e}")
+        raise
