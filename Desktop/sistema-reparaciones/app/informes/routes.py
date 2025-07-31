@@ -209,16 +209,37 @@ def generate_pdf(id):
     report = TechnicalReport.query.get_or_404(id)
     
     try:
+        print(f"🔍 Generando PDF para informe ID: {id}")
+        
+        # Verificar que existan las carpetas
+        output_dir = os.path.join('app', 'static', 'reports')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+            print(f"📁 Carpeta creada: {output_dir}")
+        
         # Generar PDF
+        print("📄 Llamando a generate_report_pdf...")
         pdf_path = generate_report_pdf(report)
+        print(f"📄 PDF generado en: {pdf_path}")
         
         if not os.path.exists(pdf_path):
-            flash('Error generando el PDF. Inténtalo de nuevo.', 'error')
+            error_msg = f'PDF no encontrado en: {pdf_path}'
+            print(f"❌ {error_msg}")
+            flash(error_msg, 'error')
+            return redirect(url_for('informes.view', id=id))
+        
+        # Verificar tamaño del archivo
+        file_size = os.path.getsize(pdf_path)
+        print(f"📊 Tamaño del PDF: {file_size} bytes")
+        
+        if file_size == 0:
+            flash('Error: El PDF generado está vacío', 'error')
             return redirect(url_for('informes.view', id=id))
         
         # Nombre para descarga
         safe_claim = "".join(c for c in report.claim_number if c.isalnum() or c in (' ', '-', '_')).rstrip()
         download_name = f"Informe_Tecnico_{safe_claim}.pdf"
+        print(f"💾 Nombre de descarga: {download_name}")
         
         # Enviar archivo
         return send_file(
@@ -229,8 +250,14 @@ def generate_pdf(id):
         )
         
     except Exception as e:
-        flash('Error generando el PDF. Inténtalo de nuevo.', 'error')
-        print(f"Error generando PDF: {e}")  # Para debugging
+        error_msg = f'Error generando PDF: {str(e)}'
+        print(f"❌ {error_msg}")
+        flash(error_msg, 'error')
+        
+        # Mostrar traceback completo para debugging
+        import traceback
+        traceback.print_exc()
+        
         return redirect(url_for('informes.view', id=id))
 
 @bp.route('/preview-pdf/<int:id>')

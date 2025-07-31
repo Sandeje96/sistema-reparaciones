@@ -6,19 +6,21 @@ Utilidades para generar PDFs de informes técnicos.
 import os
 import io
 from datetime import datetime
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.units import inch, mm
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
 from reportlab.lib.colors import HexColor, white, black
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
-from PIL import Image as PILImage
-import uuid
+try:
+    from PIL import Image as PILImage
+except ImportError:
+    PILImage = None
 
 class TechnicalReportPDF:
-    """Generador de PDFs para informes técnicos con formato idéntico al original."""
+    """Generador de PDFs para informes técnicos."""
     
     def __init__(self, report_data):
         self.data = report_data
@@ -28,7 +30,7 @@ class TechnicalReportPDF:
         self._setup_custom_styles()
     
     def _setup_custom_styles(self):
-        """Configurar estilos personalizados para replicar el formato original."""
+        """Configurar estilos personalizados."""
         
         # Estilo para el título principal
         self.styles.add(ParagraphStyle(
@@ -36,12 +38,12 @@ class TechnicalReportPDF:
             parent=self.styles['Heading1'],
             fontSize=24,
             spaceAfter=30,
-            textColor=HexColor('#4A90E2'),  # Azul similar al original
+            textColor=HexColor('#4A90E2'),
             alignment=TA_CENTER,
             fontName='Helvetica-Bold'
         ))
         
-        # Estilo para encabezados de sección (Cliente, Asegurado, etc.)
+        # Estilo para encabezados de sección
         self.styles.add(ParagraphStyle(
             name='SectionHeader',
             parent=self.styles['Normal'],
@@ -84,22 +86,6 @@ class TechnicalReportPDF:
             rightIndent=12,
             leading=14
         ))
-        
-        # Estilo para información del técnico
-        self.styles.add(ParagraphStyle(
-            name='TechnicianInfo',
-            parent=self.styles['Normal'],
-            fontSize=10,
-            spaceAfter=6,
-            textColor=HexColor('#4A90E2'),
-            alignment=TA_LEFT,
-            fontName='Helvetica-Bold',
-            borderWidth=1,
-            borderColor=HexColor('#4A90E2'),
-            leftIndent=8,
-            rightIndent=8,
-            leading=12
-        ))
     
     def generate_pdf(self, output_path):
         """Generar el PDF completo."""
@@ -126,23 +112,15 @@ class TechnicalReportPDF:
             self._build_images_pages()
         
         # Generar PDF
-        self.doc.build(self.story)
-        return output_path
+        try:
+            self.doc.build(self.story)
+            return output_path
+        except Exception as e:
+            print(f"Error en doc.build(): {e}")
+            raise
     
     def _build_header(self):
-        """Construir encabezado con logo y título."""
-        
-        # Logo ARTEC (si existe)
-        logo_path = os.path.join('app', 'static', 'images', 'logo-artec.png')
-        if os.path.exists(logo_path):
-            try:
-                logo = Image(logo_path, width=60*mm, height=60*mm)
-                logo.hAlign = 'LEFT'
-                self.story.append(logo)
-                self.story.append(Spacer(1, 10*mm))
-            except:
-                pass  # Si hay error con el logo, continuar sin él
-        
+        """Construir encabezado con título."""
         # Título principal
         title = Paragraph("Soluciones Tecnológicas", self.styles['CustomTitle'])
         self.story.append(title)
@@ -260,14 +238,14 @@ class TechnicalReportPDF:
         license_number = self.data.get('professional_license', '2200')
         
         tech_info = f"Técnico: {technician_name}    Mat. Prof: {license_number}"
-        tech_para = Paragraph(tech_info, self.styles['TechnicianInfo'])
+        tech_para = Paragraph(tech_info, self.styles['SectionContent'])
         self.story.append(tech_para)
     
     def _build_images_pages(self):
         """Construir páginas adicionales con imágenes."""
         
         images = self.data.get('images', [])
-        if not images:
+        if not images or not PILImage:
             return
         
         for image_info in images:
@@ -287,9 +265,9 @@ class TechnicalReportPDF:
                         orig_width, orig_height = pil_img.size
                         
                         # Calcular escala manteniendo proporción
-                        width_scale = max_width / (orig_width * 0.75)  # 0.75 puntos por pixel
+                        width_scale = max_width / (orig_width * 0.75)
                         height_scale = max_height / (orig_height * 0.75)
-                        scale = min(width_scale, height_scale, 1.0)  # No agrandar
+                        scale = min(width_scale, height_scale, 1.0)
                         
                         final_width = orig_width * 0.75 * scale
                         final_height = orig_height * 0.75 * scale
@@ -300,9 +278,9 @@ class TechnicalReportPDF:
                     self.story.append(img)
                     
                 except Exception as e:
-                    # Si hay error con la imagen, agregar texto
+                    print(f"Error procesando imagen {image_info['number']}: {e}")
                     error_para = Paragraph(f"Error cargando imagen {image_info['number']}", 
-                                         self.styles['Normal'])
+                                         self.styles['SectionContent'])
                     self.story.append(error_para)
 
 def generate_report_pdf(report):
@@ -316,39 +294,44 @@ def generate_report_pdf(report):
         str: Ruta del archivo PDF generado
     """
     
-    # Preparar datos para el generador
-    report_data = {
-        'insurance_company': report.insurance_company,
-        'insured_company': report.insured_company,
-        'claim_number': report.claim_number,
-        'incident_date': report.incident_date,
-        'device_type': report.device_type,
-        'brand': report.brand,
-        'model': report.model,
-        'serial_number': report.serial_number or '',
-        'problem_description': report.problem_description,
-        'technical_diagnosis': report.technical_diagnosis,
-        'diagnosis_price': report.diagnosis_price,
-        'repair_price': report.repair_price,
-        'technician_name': report.technician_name,
-        'professional_license': report.professional_license,
-        'images': report.get_images()
-    }
-    
-    # Crear directorio de salida si no existe
-    output_dir = os.path.join('app', 'static', 'reports')
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Nombre del archivo PDF
-    safe_claim = "".join(c for c in report.claim_number if c.isalnum() or c in (' ', '-', '_')).rstrip()
-    filename = f"informe_{safe_claim}_{report.id}.pdf"
-    output_path = os.path.join(output_dir, filename)
-    
-    # Generar PDF
-    pdf_generator = TechnicalReportPDF(report_data)
-    pdf_generator.generate_pdf(output_path)
-    
-    return output_path
+    try:
+        # Preparar datos para el generador
+        report_data = {
+            'insurance_company': report.insurance_company,
+            'insured_company': report.insured_company,
+            'claim_number': report.claim_number,
+            'incident_date': report.incident_date,
+            'device_type': report.device_type,
+            'brand': report.brand,
+            'model': report.model,
+            'serial_number': report.serial_number or '',
+            'problem_description': report.problem_description,
+            'technical_diagnosis': report.technical_diagnosis,
+            'diagnosis_price': report.diagnosis_price,
+            'repair_price': report.repair_price,
+            'technician_name': report.technician_name,
+            'professional_license': report.professional_license,
+            'images': report.get_images()
+        }
+        
+        # Crear directorio de salida si no existe
+        output_dir = os.path.join('app', 'static', 'reports')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Nombre del archivo PDF
+        safe_claim = "".join(c for c in report.claim_number if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        filename = f"informe_{safe_claim}_{report.id}.pdf"
+        output_path = os.path.abspath(os.path.join(output_dir, filename))
+        
+        # Generar PDF
+        pdf_generator = TechnicalReportPDF(report_data)
+        pdf_generator.generate_pdf(output_path)
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"Error en generate_report_pdf: {e}")
+        raise
 
 def save_uploaded_image(file, report_uuid, image_number):
     """
@@ -384,11 +367,13 @@ def save_uploaded_image(file, report_uuid, image_number):
         file.save(file_path)
         
         # Optimizar imagen si es muy grande
-        optimize_image(file_path, max_size=(1920, 1080), quality=85)
+        if PILImage:
+            optimize_image(file_path, max_size=(1920, 1080), quality=85)
         
         return filename
         
     except Exception as e:
+        print(f"Error guardando imagen: {e}")
         # Si hay error, intentar eliminar archivo parcial
         if os.path.exists(file_path):
             try:
@@ -400,13 +385,11 @@ def save_uploaded_image(file, report_uuid, image_number):
 def optimize_image(image_path, max_size=(1920, 1080), quality=85):
     """
     Optimizar imagen redimensionando y comprimiendo.
-    
-    Args:
-        image_path: Ruta de la imagen
-        max_size: Tamaño máximo (width, height)
-        quality: Calidad de compresión (1-100)
     """
     
+    if not PILImage:
+        return
+        
     try:
         with PILImage.open(image_path) as img:
             # Convertir a RGB si es necesario
@@ -425,15 +408,11 @@ def optimize_image(image_path, max_size=(1920, 1080), quality=85):
             img.save(image_path, 'JPEG', quality=quality, optimize=True)
             
     except Exception as e:
-        # Si hay error, no hacer nada (mantener imagen original)
-        pass
+        print(f"Error optimizando imagen: {e}")
 
 def delete_report_files(report):
     """
     Eliminar archivos asociados a un reporte (imágenes y PDF).
-    
-    Args:
-        report: Instancia del modelo TechnicalReport
     """
     
     # Eliminar imágenes
@@ -448,4 +427,4 @@ def delete_report_files(report):
         try:
             os.remove(pdf_path)
         except OSError:
-            pass  # Error silencioso si no se puede eliminar
+            pass
