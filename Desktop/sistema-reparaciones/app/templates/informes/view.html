@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/informes.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center">
+                    <a href="{{ url_for('informes.index') }}" class="btn btn-outline-secondary me-3">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h1 class="h3 mb-1">
+                            <i class="bi bi-file-text text-primary me-2"></i>
+                            Informe Técnico #{{ report.id }}
+                        </h1>
+                        <p class="text-muted mb-0">
+                            Siniestro: {{ report.claim_number }}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="btn-group">
+                    <a href="{{ url_for('informes.generate_pdf', id=report.id) }}" class="btn btn-success">
+                        <i class="bi bi-file-pdf me-1"></i>Descargar PDF
+                    </a>
+                    <button type="button" class="btn btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                        <span class="visually-hidden">Más opciones</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('informes.preview_pdf', id=report.id) }}" target="_blank">
+                            <i class="bi bi-eye me-2"></i>Vista Previa PDF
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('informes.edit', id=report.id) }}">
+                            <i class="bi bi-pencil me-2"></i>Editar Informe
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete()">
+                            <i class="bi bi-trash me-2"></i>Eliminar
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del seguro -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100 border-primary">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-shield-check text-primary me-2"></i>
+                            Información del Seguro
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Cliente:</strong></div>
+                            <div class="col-8">{{ report.insurance_company }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Asegurado:</strong></div>
+                            <div class="col-8">{{ report.insured_company }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Siniestro:</strong></div>
+                            <div class="col-8"><code class="text-primary">{{ report.claim_number }}</code></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4"><strong>Fecha:</strong></div>
+                            <div class="col-8">{{ report.incident_date.strftime('%d/%m/%Y') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-gear text-info me-2"></i>
+                            Información del Equipo
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Objeto:</strong></div>
+                            <div class="col-8">{{ report.device_type }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Marca:</strong></div>
+                            <div class="col-8">{{ report.brand }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Modelo:</strong></div>
+                            <div class="col-8">{{ report.model }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4"><strong>Serie:</strong></div>
+                            <div class="col-8">
+                                {% if report.serial_number %}
+                                    <code>{{ report.serial_number }}</code>
+                                {% else %}
+                                    <span class="text-muted">No especificado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4"><strong>Detalles:</strong></div>
+                            <div class="col-8">{{ report.problem_description }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnóstico técnico -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-tools text-warning me-2"></i>
+                            Diagnóstico Técnico
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="technical-diagnosis">
+                            {{ report.technical_diagnosis | replace('\n', '<br>') | safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Precios -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-success">
+                    <div class="card-header bg-success bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-currency-dollar text-success me-2"></i>
+                            Precio de Diagnóstico
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <h3 class="text-success mb-0">
+                            ${{ "{:,.0f}".format(report.diagnosis_price) }}
+                        </h3>
+                        <small class="text-muted">Costo del diagnóstico técnico</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                {% if report.repair_price %}
+                <div class="card border-primary">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-tools text-primary me-2"></i>
+                            Precio de Reparación
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <h3 class="text-primary mb-0">
+                            ${{ "{:,.0f}".format(report.repair_price) }}
+                        </h3>
+                        <small class="text-muted">Costo estimado de reparación</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card border-secondary">
+                    <div class="card-header bg-secondary bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-tools text-secondary me-2"></i>
+                            Precio de Reparación
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <h3 class="text-secondary mb-0">
+                            No especificado
+                        </h3>
+                        <small class="text-muted">Sin cotización de reparación</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Información del técnico -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-dark">
+                    <div class="card-header bg-dark bg-opacity-10">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-person-badge text-dark me-2"></i>
+                            Información del Técnico
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <strong>Técnico:</strong> {{ report.technician_name }}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Mat. Prof:</strong> {{ report.professional_license }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Imágenes -->
+        {% set images = report.get_images() %}
+        {% if images %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-camera text-secondary me-2"></i>
+                            Imágenes del Equipo ({{ images|length }})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for image in images %}
+                            <div class="col-md-4 mb-3">
+                                <div class="image-container">
+                                    <img src="{{ url_for('static', filename=image.path) }}" 
+                                         class="img-fluid rounded shadow-sm" 
+                                         alt="Imagen {{ image.number }}"
+                                         style="max-height: 250px; width: 100%; object-fit: cover; cursor: pointer;"
+                                         onclick="showImageModal('{{ url_for('static', filename=image.path) }}', 'Imagen {{ image.number }}')">
+                                    <div class="text-center mt-2">
+                                        <small class="text-muted">Imagen {{ image.number }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Información del sistema -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">ID del Informe</small>
+                                <strong>#{{ report.id }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Creado por</small>
+                                <strong>{{ report.creator.username if report.creator else 'Sistema' }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Fecha de creación</small>
+                                <strong>{{ report.created_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Última actualización</small>
+                                <strong>{{ report.updated_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver imágenes en grande -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">Imagen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Imagen ampliada">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este informe técnico?</p>
+                <div class="alert alert-warning">
+                    <strong>Siniestro:</strong> {{ report.claim_number }}<br>
+                    <strong>Asegurado:</strong> {{ report.insured_company }}<br>
+                    <strong>Equipo:</strong> {{ report.device_type }} {{ report.brand }} {{ report.model }}
+                </div>
+                <p class="text-muted small">
+                    Esta acción eliminará permanentemente el informe y todas sus imágenes asociadas.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('informes.delete', id=report.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animación de entrada para las cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.3s ease-out';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+
+// Función para mostrar imagen en modal
+function showImageModal(imageSrc, imageTitle) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModalTitle').textContent = imageTitle;
+    const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    imageModal.show();
+}
+
+// Función para confirmar eliminación
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+
+<style>
+/* Estilos adicionales para el diagnóstico técnico */
+.technical-diagnosis {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #ffc107;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.technical-diagnosis p {
+    margin-bottom: 1rem;
+}
+
+.technical-diagnosis ul {
+    padding-left: 1.5rem;
+}
+
+/* Hover effect para imágenes */
+.image-container img:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+/* Estilos para impresión */
+@media print {
+    .btn, .dropdown, .modal {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .card-header {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+    }
+}
+</style>
+{% endblock %}

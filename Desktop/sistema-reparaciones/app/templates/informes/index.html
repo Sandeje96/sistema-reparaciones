@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/informes.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="bi bi-file-text text-primary me-2"></i>
+                    Informes Técnicos
+                </h1>
+                <p class="text-muted mb-0">
+                    Gestiona informes técnicos para compañías de seguros
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('informes.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Crear Informe
+                </a>
+            </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary bg-opacity-10 border-primary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-text text-primary fs-1"></i>
+                        <h5 class="card-title mt-2">Total Informes</h5>
+                        <p class="card-text fs-4 fw-bold" id="total-reports-count">{{ reports.total if reports else 0 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success bg-opacity-10 border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check text-success fs-1"></i>
+                        <h5 class="card-title mt-2">Este Mes</h5>
+                        <p class="card-text fs-4 fw-bold" id="monthly-reports-count">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info bg-opacity-10 border-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-tools text-info fs-1"></i>
+                        <h5 class="card-title mt-2">Marca Frecuente</h5>
+                        <p class="card-text fs-6 fw-bold" id="top-brand">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning bg-opacity-10 border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">Promedio Diag.</h5>
+                        <p class="card-text fs-6 fw-bold">$25.000</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-8">
+                        {{ search_form.search(class="form-control", placeholder="Buscar por asegurado, siniestro, marca, modelo...") }}
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </button>
+                    </div>
+                </form>
+                
+                {% if search %}
+                <div class="mt-3">
+                    <a href="{{ url_for('informes.index') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar Búsqueda
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Lista de informes -->
+        {% if reports.items %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="mb-0">
+                            <i class="bi bi-list-ul me-1"></i>
+                            Mostrando {{ reports.items|length }} de {{ reports.total }} informes
+                        </h6>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            Ordenado por fecha (más recientes primero)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Versión móvil -->
+                <div class="d-md-none">
+                    {% for report in reports.items %}
+                    <div class="report-card-mobile border-bottom p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ report.insured_company }}</h6>
+                                <small class="text-muted">Siniestro: {{ report.claim_number }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ report.incident_date.strftime('%d/%m/%Y') }}</small>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-2">
+                            <strong>{{ report.device_type }}</strong> - {{ report.brand }} {{ report.model }}
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary">${{ "{:,.0f}".format(report.diagnosis_price) }}</span>
+                            
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('informes.view', id=report.id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('informes.generate_pdf', id=report.id) }}" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                                <a href="{{ url_for('informes.edit', id=report.id) }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-outline-danger btn-sm delete-btn" 
+                                        data-report-id="{{ report.id }}" 
+                                        data-claim="{{ report.claim_number }}" 
+                                        data-device="{{ report.device_type }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Versión escritorio -->
+                <div class="d-none d-md-block">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 20%">Asegurado</th>
+                                    <th style="width: 15%">Siniestro</th>
+                                    <th style="width: 20%">Equipo</th>
+                                    <th style="width: 12%">Fecha</th>
+                                    <th style="width: 10%">Diagnóstico</th>
+                                    <th style="width: 10%">Reparación</th>
+                                    <th style="width: 13%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports.items %}
+                                <tr class="report-row">
+                                    <td>
+                                        <div class="fw-semibold">{{ report.insured_company }}</div>
+                                        <small class="text-muted">{{ report.insurance_company }}</small>
+                                    </td>
+                                    <td>
+                                        <code class="text-primary">{{ report.claim_number }}</code>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ report.device_type }}</div>
+                                        <small class="text-muted">{{ report.brand }} {{ report.model }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ report.incident_date.strftime('%d/%m/%Y') }}</span>
+                                        <small class="text-muted d-block">{{ report.created_at.strftime('%d/%m/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">${{ "{:,.0f}".format(report.diagnosis_price) }}</span>
+                                    </td>
+                                    <td>
+                                        {% if report.repair_price %}
+                                        <span class="badge bg-success">${{ "{:,.0f}".format(report.repair_price) }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('informes.view', id=report.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="Ver">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('informes.generate_pdf', id=report.id) }}" 
+                                               class="btn btn-outline-success btn-sm" title="Descargar PDF">
+                                                <i class="bi bi-file-pdf"></i>
+                                            </a>
+                                            <a href="{{ url_for('informes.edit', id=report.id) }}" 
+                                               class="btn btn-outline-secondary btn-sm" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger btn-sm delete-btn" 
+                                                    data-report-id="{{ report.id }}" 
+                                                    data-claim="{{ report.claim_number }}" 
+                                                    data-device="{{ report.device_type }}" 
+                                                    title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        {% if reports.pages > 1 %}
+        <nav aria-label="Paginación de informes" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Anterior -->
+                {% if reports.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('informes.index', page=reports.prev_num, search=search) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                </li>
+                {% endif %}
+
+                <!-- Páginas -->
+                {% for page_num in reports.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != reports.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('informes.index', page=page_num, search=search) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Siguiente -->
+                {% if reports.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('informes.index', page=reports.next_num, search=search) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <!-- Sin informes -->
+        <div class="text-center py-5">
+            <i class="bi bi-file-text text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-muted">No hay informes técnicos</h4>
+            <p class="text-muted">
+                {% if search %}
+                No se encontraron informes con los criterios de búsqueda.
+                {% else %}
+                Comienza creando tu primer informe técnico.
+                {% endif %}
+            </p>
+            {% if not search %}
+            <a href="{{ url_for('informes.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Crear Primer Informe
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este informe técnico?</p>
+                <div class="alert alert-warning">
+                    <strong>Siniestro:</strong> <span id="delete-claim"></span><br>
+                    <strong>Equipo:</strong> <span id="delete-device"></span>
+                </div>
+                <p class="text-muted small">
+                    Esta acción eliminará permanentemente el informe y todas sus imágenes asociadas.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="delete-form" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/informes.js') }}"></script>
+{% endblock %}

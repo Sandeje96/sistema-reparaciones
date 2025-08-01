@@ -1,0 +1,449 @@
+/* app/static/css/informes.css */
+/* Estilos específicos para el módulo de informes técnicos */
+
+/* Cards de informes */
+.report-card-mobile {
+    transition: all 0.2s ease-in-out;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.report-card-mobile:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report-row {
+    transition: all 0.2s ease-in-out;
+}
+
+.report-row:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    transform: scale(1.005);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report-row td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+/* Botones de acción */
+.btn-group-sm .btn {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+    transform: translateY(-1px);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+    transform: translateY(-1px);
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+    transform: translateY(-1px);
+}
+
+/* Cards de estadísticas */
+.stats-card {
+    transition: all 0.3s ease-in-out;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stats-card .card-body {
+    padding: 2rem;
+}
+
+.stats-card .fs-1 {
+    font-size: 3rem !important;
+}
+
+.stats-card .fs-4 {
+    font-size: 2rem !important;
+    font-weight: 700;
+}
+
+/* Formularios de informe */
+.form-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 1rem;
+    border: 1px solid #dee2e6;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-section .form-control,
+.form-section .form-select {
+    background-color: white;
+    border: 1px solid #ced4da;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-section .form-control:focus,
+.form-section .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Secciones con borde inferior */
+.border-bottom {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Códigos de siniestro */
+code.text-primary {
+    background-color: rgba(13, 110, 253, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+
+/* Badges de precios */
+.badge.bg-primary,
+.badge.bg-success {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+}
+
+/* Cards de información */
+.card.border-primary {
+    border-left: 4px solid var(--bs-primary) !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.card.border-info {
+    border-left: 4px solid var(--bs-info) !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.card.border-warning {
+    border-left: 4px solid var(--bs-warning) !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.card.border-success {
+    border-left: 4px solid var(--bs-success) !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.card.border-dark {
+    border-left: 4px solid var(--bs-dark) !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.card.border-secondary {
+    border-left: 4px solid var(--bs-secondary) !important;
+    border-top: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Headers de cards con gradiente */
+.card-header.bg-primary.bg-opacity-10 {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%) !important;
+}
+
+.card-header.bg-info.bg-opacity-10 {
+    background: linear-gradient(135deg, rgba(13, 202, 240, 0.1) 0%, rgba(13, 202, 240, 0.05) 100%) !important;
+}
+
+.card-header.bg-warning.bg-opacity-10 {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%) !important;
+}
+
+.card-header.bg-success.bg-opacity-10 {
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, rgba(25, 135, 84, 0.05) 100%) !important;
+}
+
+.card-header.bg-dark.bg-opacity-10 {
+    background: linear-gradient(135deg, rgba(33, 37, 41, 0.1) 0%, rgba(33, 37, 41, 0.05) 100%) !important;
+}
+
+.card-header.bg-secondary.bg-opacity-10 {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(108, 117, 125, 0.05) 100%) !important;
+}
+
+/* Diagnóstico técnico */
+.technical-diagnosis {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #ffc107;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.technical-diagnosis p {
+    margin-bottom: 1rem;
+}
+
+.technical-diagnosis ul {
+    padding-left: 1.5rem;
+}
+
+/* Imágenes */
+.image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.image-container img {
+    transition: all 0.3s ease-in-out;
+    border-radius: 0.5rem;
+}
+
+.image-container img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading específico para eliminación de imágenes */
+.delete-image-btn.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.delete-image-btn.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.5rem;
+    margin-left: -0.5rem;
+    border: 2px solid transparent;
+    border-top-color: var(--bs-danger);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+/* Responsive específico para informes */
+@media (max-width: 768px) {
+    .report-card-mobile {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.375rem;
+        font-size: 0.75rem;
+    }
+    
+    .stats-card .card-body {
+        padding: 1.5rem 1rem;
+    }
+    
+    .stats-card .fs-1 {
+        font-size: 2rem !important;
+    }
+    
+    .stats-card .fs-4 {
+        font-size: 1.5rem !important;
+    }
+    
+    .form-section {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .technical-diagnosis {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .report-card-mobile {
+        padding: 0.75rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .stats-card .fs-1 {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* Estados especiales */
+.report-urgent {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+/* Mejoras en la visualización de datos */
+.data-highlight {
+    background: linear-gradient(120deg, rgba(13, 110, 253, 0.1) 0%, transparent 100%);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.info-grid .row {
+    display: flex;
+    align-items: center;
+}
+
+/* Tooltips personalizados */
+.info-tooltip {
+    --bs-tooltip-bg: #2c3e50;
+    --bs-tooltip-color: white;
+    --bs-tooltip-border-radius: 0.5rem;
+}
+
+/* Efectos de hover mejorados */
+.report-row:hover .btn-group {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.report-row .btn-group {
+    opacity: 0.8;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Indicadores de estado de archivo */
+.file-status {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.file-status.uploaded {
+    background-color: #198754;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.3);
+}
+
+.file-status.pending {
+    background-color: #ffc107;
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
+}
+
+.file-status.error {
+    background-color: #dc3545;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
+}
+
+/* Estilos para impresión */
+@media print {
+    .btn, .dropdown, .modal, .delete-image-btn {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        margin-bottom: 20px !important;
+        break-inside: avoid;
+    }
+    
+    .card-header {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+    }
+    
+    .technical-diagnosis {
+        background: #f9f9f9 !important;
+        border-left: 3px solid #000 !important;
+    }
+    
+    .image-container img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}

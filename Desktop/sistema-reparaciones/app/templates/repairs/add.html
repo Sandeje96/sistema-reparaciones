@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="bi bi-plus-circle text-primary me-2"></i>
+                        Agregar Nueva Reparación
+                    </h1>
+                    <p class="text-muted mb-0">Registra un nuevo equipo para reparación</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                    Información de la Reparación
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Sección: Información del Cliente -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-person me-1"></i>Información del Cliente
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                {{ form.client_name.label(class="form-label") }}
+                                {{ form.client_name(class="form-control" + (" is-invalid" if form.client_name.errors else ""), 
+                                                   placeholder="Nombre completo del cliente") }}
+                                {% if form.client_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.client_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.client_phone.label(class="form-label") }}
+                                {{ form.client_phone(class="form-control" + (" is-invalid" if form.client_phone.errors else ""), 
+                                                     placeholder="(Opcional)") }}
+                                {% if form.client_phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.client_phone.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional, para contacto</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información del Equipo -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-gear me-1"></i>Información del Equipo
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.device_type.label(class="form-label") }}
+                                {{ form.device_type(class="form-control" + (" is-invalid" if form.device_type.errors else ""), 
+                                                    placeholder="TV, Radio, Microondas, etc.") }}
+                                {% if form.device_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.device_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.brand.label(class="form-label") }}
+                                {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else ""), 
+                                              placeholder="Samsung, LG, etc.") }}
+                                {% if form.brand.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.brand.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.model.label(class="form-label") }}
+                                {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else ""), 
+                                              placeholder="Modelo específico") }}
+                                {% if form.model.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.model.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form.serial_number.label(class="form-label") }}
+                                {{ form.serial_number(class="form-control" + (" is-invalid" if form.serial_number.errors else ""), 
+                                                      placeholder="Número de serie (opcional)") }}
+                                {% if form.serial_number.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.serial_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional, ayuda en la identificación</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Problema y Diagnóstico -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-bug me-1"></i>Problema y Diagnóstico
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="mb-3">
+                                {{ form.problem_description.label(class="form-label") }}
+                                {{ form.problem_description(class="form-control" + (" is-invalid" if form.problem_description.errors else ""), 
+                                                            rows="4", 
+                                                            placeholder="Describe detalladamente el problema reportado por el cliente...") }}
+                                {% if form.problem_description.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.problem_description.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Mínimo 10 caracteres</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Estado inicial de la reparación</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.repair_cost.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.repair_cost(class="form-control" + (" is-invalid" if form.repair_cost.errors else ""), 
+                                                        placeholder="0.00", step="0.01") }}
+                                    {% if form.repair_cost.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.repair_cost.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Opcional, costo estimado</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información Adicional -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="bi bi-info-circle me-1"></i>Información Adicional
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.diagnosis_notes.label(class="form-label") }}
+                                {{ form.diagnosis_notes(class="form-control" + (" is-invalid" if form.diagnosis_notes.errors else ""), 
+                                                        rows="3", 
+                                                        placeholder="Notas del diagnóstico inicial (opcional)...") }}
+                                {% if form.diagnosis_notes.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.diagnosis_notes.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Observaciones técnicas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.parts_needed.label(class="form-label") }}
+                                {{ form.parts_needed(class="form-control" + (" is-invalid" if form.parts_needed.errors else ""), 
+                                                    rows="3", 
+                                                    placeholder="Lista de repuestos necesarios (opcional)...") }}
+                                {% if form.parts_needed.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.parts_needed.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Componentes o piezas a cambiar</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección: Información para Informes Técnicos -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3 text-success">
+                                <i class="bi bi-file-text me-1"></i>Información para Informes Técnicos (Opcional)
+                            </h6>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Información opcional:</strong> Si completas estos campos, podrás generar informes técnicos más rápidamente usando los datos de esta reparación.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.insurance_company.label(class="form-label") }}
+                                {{ form.insurance_company(class="form-control" + (" is-invalid" if form.insurance_company.errors else ""), 
+                                                        placeholder="Ej: SANCOR COOP. LIMITADA DE SEGUROS") }}
+                                {% if form.insurance_company.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.insurance_company.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.insured_company.label(class="form-label") }}
+                                {{ form.insured_company(class="form-control" + (" is-invalid" if form.insured_company.errors else ""), 
+                                                    placeholder="Nombre de la empresa asegurada") }}
+                                {% if form.insured_company.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.insured_company.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.claim_number.label(class="form-label") }}
+                                {{ form.claim_number(class="form-control" + (" is-invalid" if form.claim_number.errors else ""), 
+                                                    placeholder="Ej: 2100192077") }}
+                                {% if form.claim_number.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.claim_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.incident_date.label(class="form-label") }}
+                                {{ form.incident_date(class="form-control" + (" is-invalid" if form.incident_date.errors else "")) }}
+                                {% if form.incident_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.incident_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Fecha del siniestro o incidente</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                {{ form.submit(class="btn btn-primary btn-lg px-4") }}
+                                <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary btn-lg px-4">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ayuda rápida -->
+        <div class="card mt-4 bg-light">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>
+                    Consejos para el registro
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Descripción clara:</strong> Detalla exactamente qué problema tiene el equipo
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Información completa:</strong> Incluye marca y modelo para mejor identificación
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Estado inicial:</strong> Selecciona "Falta diagnóstico" si aún no revisaste el equipo
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>Teléfono de contacto:</strong> Facilita la comunicación con el cliente
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el primer campo
+    const firstInput = document.querySelector('input[name="client_name"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Validación en tiempo real para el costo
+    const costInput = document.querySelector('input[name="repair_cost"]');
+    if (costInput) {
+        costInput.addEventListener('input', function() {
+            let value = this.value;
+            // Remover caracteres no numéricos excepto punto y coma
+            value = value.replace(/[^0-9.,]/g, '');
+            // Reemplazar coma por punto
+            value = value.replace(',', '.');
+            // Solo permitir un punto decimal
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+        });
+    }
+    
+    // Contador de caracteres para descripción del problema
+    const problemDescription = document.querySelector('textarea[name="problem_description"]');
+    if (problemDescription) {
+        const helpText = problemDescription.nextElementSibling;
+        const originalText = helpText.textContent;
+        
+        function updateCounter() {
+            const length = problemDescription.value.length;
+            const minLength = 10;
+            
+            if (length < minLength) {
+                helpText.textContent = `${originalText} (${length}/mínimo ${minLength})`;
+                helpText.className = 'form-text text-warning';
+            } else {
+                helpText.textContent = `${originalText} (${length} caracteres)`;
+                helpText.className = 'form-text text-success';
+            }
+        }
+        
+        problemDescription.addEventListener('input', updateCounter);
+        updateCounter(); // Inicial
+    }
+    
+    // Sugerencias de tipos de equipo
+    const deviceTypeInput = document.querySelector('input[name="device_type"]');
+    if (deviceTypeInput) {
+        const suggestions = [
+            'Televisor', 'Radio', 'Microondas', 'Heladera', 'Lavarropas', 
+            'Aire Acondicionado', 'Equipo de Música', 'DVD', 'Ventilador',
+            'Plancha', 'Licuadora', 'Batidora', 'Cafetera', 'Tostadora'
+        ];
+        
+        // Crear datalist para autocompletado
+        const datalist = document.createElement('datalist');
+        datalist.id = 'device-suggestions';
+        suggestions.forEach(suggestion => {
+            const option = document.createElement('option');
+            option.value = suggestion;
+            datalist.appendChild(option);
+        });
+        
+        document.body.appendChild(datalist);
+        deviceTypeInput.setAttribute('list', 'device-suggestions');
+    }
+});
+</script>
+{% endblock %}
