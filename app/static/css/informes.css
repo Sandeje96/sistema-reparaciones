@@ -198,7 +198,7 @@ code.text-primary {
 
 /* Diagnóstico técnico */
 .technical-diagnosis {
-    background: #f8f9fa;
+    background: #212529;
     padding: 1.5rem;
     border-radius: 0.5rem;
     border-left: 4px solid #ffc107;
