@@ -20,7 +20,7 @@ def check_database():
             
             # Verificar si las nuevas columnas existen
             column_names = [col['name'] for col in columns]
-            new_columns = ['insurance_company', 'insured_company', 'claim_number', 'incident_date']
+            new_columns = ['insurance_company', 'insured_gcompany', 'claim_number', 'incident_date']
             
             print("\n🔍 Verificando nuevas columnas:")
             for col in new_columns:
