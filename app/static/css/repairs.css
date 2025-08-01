@@ -140,12 +140,14 @@
     border-color: #146c43;
 }
 
-/* Tablas - LIMPIAS */
+/* Tablas - ADAPTADAS PARA FONDO OSCURO */
 .table {
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
     border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+    color: #ffffff;
 }
 
 .table thead th {
@@ -158,10 +160,22 @@
 
 .table tbody tr {
     border: none;
+    color: #ffffff;
+}
+
+.table tbody td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
 }
 
 .table tbody tr:nth-child(even) {
-    background-color: rgba(248, 249, 250, 0.5);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 144, 206, 0.1);
 }
 
 /* Botones de acción - SUTILES */

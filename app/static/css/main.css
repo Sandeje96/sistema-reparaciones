@@ -330,7 +330,7 @@ h6.text-primary {
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.2s ease-in-out;
     background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    color: #ffffff !important;
 }
 
 .form-control:focus, .form-select:focus {
@@ -338,10 +338,43 @@ h6.text-primary {
     box-shadow: 0 0 0 0.2rem rgba(0, 144, 206, 0.25);
     transform: scale(1.01);
     background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff !important;
+}
+
+/* IMPORTANTE: Texto mientras se escribe */
+.form-control:active,
+.form-control:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    color: #ffffff !important;
+}
+
+/* Asegurar que el texto sea blanco en todos los estados */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.6) !important;
 }
 
 .form-label {
