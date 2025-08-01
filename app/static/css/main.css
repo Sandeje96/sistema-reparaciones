@@ -188,9 +188,49 @@ h6.text-primary {
     color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* Texto secundario */
-.text-muted {
-    color: rgba(255, 255, 255, 0.6) !important;
+/* Cards especiales - Ayuda rápida y similares */
+.card.bg-light {
+    background: rgba(0, 144, 206, 0.1) !important;
+    border: 1px solid rgba(0, 144, 206, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.card.bg-light .card-body {
+    color: #ffffff;
+}
+
+.card.bg-light .card-title {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.card.bg-light .text-warning {
+    color: var(--color-400) !important;
+}
+
+.card.bg-light .text-success {
+    color: var(--color-300) !important;
+}
+
+.card.bg-light .text-primary {
+    color: var(--color-500) !important;
+}
+
+.card.bg-light strong {
+    color: var(--color-200);
+}
+
+.card.bg-light li {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Iconos de check en listas */
+.bi-check-circle {
+    color: var(--color-400) !important;
+}
+
+.bi-lightbulb {
+    color: #ffc107 !important;
 }
 
 /* Botones - AZUL SOLO EN PRIMARY */
