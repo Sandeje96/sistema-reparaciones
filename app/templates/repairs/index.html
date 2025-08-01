@@ -104,21 +104,6 @@
         <!-- Lista de reparaciones -->
         {% if repairs.items %}
         <div class="card">
-            <div class="card-header bg-light">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h6 class="mb-0">
-                            <i class="bi bi-list-ul me-1"></i>
-                            Mostrando {{ repairs.items|length }} de {{ repairs.total }} reparaciones
-                        </h6>
-                    </div>
-                    <div class="col-auto">
-                        <small class="text-muted">
-                            Ordenado por antigüedad (más antiguos primero)
-                        </small>
-                    </div>
-                </div>
-            </div>
             <div class="card-body p-0">
                 <!-- Versión móvil -->
                 <div class="d-md-none">
