@@ -171,6 +171,7 @@
     color: #ffffff;
     vertical-align: middle;
     padding: 1rem 0.75rem;
+    background: rgba(0, 79, 113, 0.3);
 }
 
 .table tbody tr:nth-child(even) {
