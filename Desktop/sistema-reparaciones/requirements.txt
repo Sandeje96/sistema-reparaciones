@@ -1,7 +1,4 @@
-Perfecto, veo que tu requirements.txt está funcionando bien. Solo necesitas agregar la dependencia de PostgreSQL para solucionar el error de conexión.
-PASO 1: Agregar psycopg2-binary
-Simplemente agrega esta línea al final de tu archivo requirements.txt:
-txt# Framework principal
+# Framework principal
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-Login==0.6.2
@@ -33,5 +30,5 @@ Pillow==10.4.0
 # Fechas
 python-dateutil==2.8.2
 
-# Conexión PostgreSQL - AGREGAR ESTA LÍNEA
+# Conexión PostgreSQL
 psycopg2-binary==2.9.9
