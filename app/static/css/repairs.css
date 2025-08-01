@@ -1,284 +1,302 @@
 /* app/static/css/repairs.css */
-/* Estilos específicos para el módulo de reparaciones */
+/* Estilos específicos para el módulo de reparaciones - NUEVA PALETA AZUL */
 
-/* Prioridades de reparación */
+/* Prioridades de reparación actualizadas */
 .priority-high {
     border-left: 4px solid var(--priority-high);
-    background: linear-gradient(90deg, rgba(220, 53, 69, 0.1) 0%, transparent 10%);
+    background: linear-gradient(90deg, rgba(220, 53, 69, 0.1) 0%, rgba(230, 247, 255, 0.3) 10%, transparent 15%);
+    transition: all 0.3s ease-in-out;
 }
 
 .priority-medium {
-    border-left: 4px solid var(--priority-medium);
-    background: linear-gradient(90deg, rgba(253, 126, 20, 0.1) 0%, transparent 10%);
+    border-left: 4px solid var(--color-400);
+    background: linear-gradient(90deg, rgba(44, 192, 255, 0.1) 0%, rgba(230, 247, 255, 0.3) 10%, transparent 15%);
+    transition: all 0.3s ease-in-out;
 }
 
 .priority-low {
-    border-left: 4px solid var(--priority-low);
-    background: linear-gradient(90deg, rgba(25, 135, 84, 0.1) 0%, transparent 10%);
+    border-left: 4px solid var(--color-600);
+    background: linear-gradient(90deg, rgba(0, 144, 206, 0.1) 0%, rgba(230, 247, 255, 0.3) 10%, transparent 15%);
+    transition: all 0.3s ease-in-out;
 }
 
-/* Badges de prioridad */
+.priority-high:hover,
+.priority-medium:hover,
+.priority-low:hover {
+    background: linear-gradient(90deg, var(--color-100) 0%, var(--color-50) 10%, transparent 20%);
+    box-shadow: var(--shadow);
+}
+
+/* Badges de prioridad mejorados */
 .priority-badge-high {
-    background-color: var(--priority-high);
+    background: linear-gradient(135deg, var(--priority-high) 0%, #b02a37 100%);
     color: white;
     font-weight: 600;
     box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
-}
-
-.priority-badge-medium {
-    background-color: var(--priority-medium);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(253, 126, 20, 0.3);
-}
-
-.priority-badge-low {
-    background-color: var(--priority-low);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(25, 135, 84, 0.3);
-}
-
-/* Filas de reparación */
-.repair-row {
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
     transition: all 0.2s ease-in-out;
 }
 
+.priority-badge-medium {
+    background: linear-gradient(135deg, var(--color-400) 0%, var(--color-500) 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(44, 192, 255, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.priority-badge-low {
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 144, 206, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.priority-badge-high:hover,
+.priority-badge-medium:hover,
+.priority-badge-low:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Filas de reparación mejoradas */
+.repair-row {
+    transition: all 0.3s ease-in-out;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+}
+
 .repair-row:hover {
-    background-color: rgba(13, 110, 253, 0.05);
+    background: linear-gradient(135deg, var(--color-50) 0%, var(--color-100) 100%);
     transform: scale(1.005);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
+    border-radius: 0.5rem;
 }
 
 .repair-row td {
     vertical-align: middle;
     padding: 1rem 0.75rem;
+    border: none;
 }
 
-/* Cards móviles */
+.repair-row:first-child td {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.repair-row:last-child td {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+/* Cards móviles mejoradas */
 .repair-card-mobile {
-    transition: all 0.2s ease-in-out;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
+    transition: all 0.3s ease-in-out;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--color-200);
+    box-shadow: 0 2px 8px rgba(0, 144, 206, 0.1);
 }
 
 .repair-card-mobile:hover {
-    background-color: rgba(13, 110, 253, 0.05);
+    background: linear-gradient(135deg, var(--color-50) 0%, rgba(255, 255, 255, 0.95) 100%);
     transform: translateX(5px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
+    border-color: var(--color-400);
 }
 
-/* Selector de estado */
+/* Selector de estado mejorado */
 .status-select {
-    transition: all 0.2s ease-in-out;
-    border-radius: 0.375rem;
+    transition: all 0.3s ease-in-out;
+    border-radius: 0.5rem;
     font-weight: 500;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid var(--color-200);
 }
 
 .status-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    border-color: var(--color-600);
+    box-shadow: 0 0 0 0.2rem rgba(0, 144, 206, 0.25);
     transform: scale(1.02);
+    background: white;
 }
 
+.status-select:hover {
+    border-color: var(--color-400);
+    background: white;
+}
+
+/* Estados específicos con colores azules */
 .status-select[data-status="pending_diagnosis"] {
-    background-color: rgba(255, 193, 7, 0.1);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, var(--color-50) 100%);
     border-color: #ffc107;
 }
 
 .status-select[data-status="diagnosed"] {
-    background-color: rgba(13, 202, 240, 0.1);
-    border-color: #0dcaf0;
+    background: linear-gradient(135deg, var(--color-100) 0%, var(--color-50) 100%);
+    border-color: var(--color-400);
+}
+
+.status-select[data-status="in_progress"] {
+    background: linear-gradient(135deg, var(--color-200) 0%, var(--color-100) 100%);
+    border-color: var(--color-500);
 }
 
 .status-select[data-status="waiting_parts"] {
-    background-color: rgba(253, 126, 20, 0.1);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, var(--color-100) 100%);
     border-color: #fd7e14;
 }
 
 .status-select[data-status="ready_for_delivery"] {
-    background-color: rgba(25, 135, 84, 0.1);
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, var(--color-50) 100%);
     border-color: #198754;
 }
 
 .status-select[data-status="delivered"] {
-    background-color: rgba(108, 117, 125, 0.1);
-    border-color: #6c757d;
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.15) 0%, var(--color-100) 100%);
+    border-color: #146c43;
 }
 
-.status-select[data-status="no_repair"] {
-    background-color: rgba(220, 53, 69, 0.1);
-    border-color: #dc3545;
+/* Tablas mejoradas */
+.table {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
-/* Descripción del problema */
-.problem-text {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    color: #495057;
+.table thead th {
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 1rem 0.75rem;
 }
 
-/* Botones de acción */
-.btn-group-sm .btn {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.875rem;
-    border-radius: 0.25rem;
+.table tbody tr {
+    border: none;
 }
 
-.btn-outline-primary:hover {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+.table tbody tr:nth-child(even) {
+    background: rgba(230, 247, 255, 0.3);
+}
+
+/* Botones de acción específicos */
+.btn-repair-action {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.2s ease-in-out;
+    border: none;
+}
+
+.btn-repair-view {
+    background: linear-gradient(135deg, var(--color-300) 0%, var(--color-400) 100%);
+    color: white;
+}
+
+.btn-repair-view:hover {
+    background: linear-gradient(135deg, var(--color-400) 0%, var(--color-500) 100%);
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(90, 206, 255, 0.3);
 }
 
-.btn-outline-secondary:hover {
-    background-color: var(--secondary-color);
-    border-color: var(--secondary-color);
+.btn-repair-edit {
+    background: linear-gradient(135deg, var(--color-500) 0%, var(--color-600) 100%);
+    color: white;
+}
+
+.btn-repair-edit:hover {
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 177, 252, 0.3);
 }
 
-.btn-outline-danger:hover {
-    background-color: var(--danger-color);
-    border-color: var(--danger-color);
-    transform: translateY(-1px);
-}
-
-/* Estadísticas del dashboard */
+/* Estadísticas mejoradas */
 .stats-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--color-200);
+    border-radius: 0.75rem;
     transition: all 0.3s ease-in-out;
-    border-radius: 1rem;
     overflow: hidden;
 }
 
 .stats-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-400);
 }
 
-.stats-card .card-body {
-    padding: 2rem;
+.stats-card .card-header {
+    background: linear-gradient(135deg, var(--color-100) 0%, var(--color-50) 100%);
+    border-bottom: 1px solid var(--color-200);
+    color: var(--color-800);
 }
 
-.stats-card .display-4 {
+.stats-number {
+    font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 0;
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.stats-card .card-title {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.875rem;
-}
-
-/* Formularios de búsqueda y filtros */
+/* Filtros de búsqueda */
 .search-filters {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 1rem;
-    border: 1px solid #dee2e6;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-200);
     padding: 1.5rem;
     margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
 }
 
 .search-filters .form-control,
 .search-filters .form-select {
-    background-color: white;
-    border: 1px solid #ced4da;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 2px solid var(--color-200);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s ease-in-out;
 }
 
 .search-filters .form-control:focus,
 .search-filters .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    border-color: var(--color-500);
+    box-shadow: 0 0 0 0.2rem rgba(0, 177, 252, 0.25);
+    background: white;
 }
 
-/* Indicadores de estado */
-.status-indicator {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
+/* Indicadores de carga */
+.loading-overlay {
+    background: rgba(230, 247, 255, 0.9);
+    backdrop-filter: blur(5px);
 }
 
-.status-indicator.pending-diagnosis {
-    background-color: #ffc107;
-    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
-}
-
-.status-indicator.diagnosed {
-    background-color: #0dcaf0;
-    box-shadow: 0 0 0 2px rgba(13, 202, 240, 0.3);
-}
-
-.status-indicator.waiting-parts {
-    background-color: #fd7e14;
-    box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.3);
-}
-
-.status-indicator.ready-delivery {
-    background-color: #198754;
-    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.3);
-}
-
-.status-indicator.delivered {
-    background-color: #6c757d;
-    box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.3);
-}
-
-.status-indicator.no-repair {
-    background-color: #dc3545;
-    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
-}
-
-/* Tooltips personalizados */
-.repair-tooltip {
-    --bs-tooltip-bg: #2c3e50;
-    --bs-tooltip-color: white;
-    --bs-tooltip-border-radius: 0.5rem;
-}
-
-/* Animaciones para cambios de estado */
-.status-change-animation {
-    animation: statusChange 0.5s ease-in-out;
-}
-
-@keyframes statusChange {
-    0% {
-        background-color: rgba(13, 110, 253, 0.2);
-    }
-    50% {
-        background-color: rgba(13, 110, 253, 0.4);
-        transform: scale(1.02);
-    }
-    100% {
-        background-color: transparent;
-        transform: scale(1);
-    }
-}
-
-/* Loading específico para cambios de estado */
-.status-loading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.7;
-}
-
-.status-loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1rem;
-    height: 1rem;
-    margin-top: -0.5rem;
-    margin-left: -0.5rem;
-    border: 2px solid transparent;
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
+.loading-spinner {
+    border: 3px solid var(--color-200);
+    border-top: 3px solid var(--color-600);
     animation: spin 0.8s linear infinite;
     z-index: 1;
+    border-radius: 50%;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive específico para reparaciones */
@@ -286,13 +304,14 @@
     .repair-card-mobile {
         padding: 1rem;
         margin-bottom: 0.75rem;
+        border-radius: 0.75rem;
     }
     
     .priority-badge-high,
     .priority-badge-medium,
     .priority-badge-low {
         font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
+        padding: 0.3rem 0.6rem;
     }
     
     .status-select {
@@ -302,6 +321,7 @@
     .btn-group-sm .btn {
         padding: 0.25rem 0.375rem;
         font-size: 0.75rem;
+        border-radius: 0.375rem;
     }
     
     .problem-text {
@@ -314,12 +334,18 @@
     
     .search-filters {
         padding: 1rem;
+        border-radius: 0.5rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
     }
 }
 
 @media (max-width: 576px) {
     .repair-card-mobile {
         padding: 0.75rem;
+        border-radius: 0.5rem;
     }
     
     .btn-group {
@@ -330,20 +356,26 @@
     .btn-group .btn {
         width: 100%;
         margin-bottom: 0.25rem;
+        border-radius: 0.375rem;
     }
     
     .status-select {
         width: 100%;
         margin-bottom: 0.5rem;
     }
+    
+    .stats-number {
+        font-size: 1.8rem;
+    }
 }
 
-/* Estados especiales */
+/* Estados especiales mejorados */
 .repair-urgent {
-    animation: pulse 2s infinite;
+    animation: pulse-blue 2s infinite;
+    border: 2px solid var(--priority-high);
 }
 
-@keyframes pulse {
+@keyframes pulse-blue {
     0% {
         box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
     }
@@ -368,16 +400,28 @@
 
 /* Mejoras en la visualización de datos */
 .data-highlight {
-    background: linear-gradient(120deg, rgba(13, 110, 253, 0.1) 0%, transparent 100%);
+    background: linear-gradient(120deg, var(--color-100) 0%, var(--color-50) 50%, transparent 100%);
     padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     font-weight: 600;
+    color: var(--color-800);
+    border: 1px solid var(--color-200);
 }
 
 .client-info {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+}
+
+.client-info .client-name {
+    font-weight: 600;
+    color: var(--color-800);
+}
+
+.client-info .client-contact {
+    font-size: 0.875rem;
+    color: var(--color-600);
 }
 
 .device-info {
@@ -388,10 +432,43 @@
 
 .device-info .device-type {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--color-800);
 }
 
 .device-info .device-details {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: var(--color-600);
+}
+
+/* Badges de estado mejorados */
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.status-badge.pending {
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    color: #000;
+    border-color: #ffb302;
+}
+
+.status-badge.in-progress {
+    background: linear-gradient(135deg, var(--color-400) 0%, var(--color-500) 100%);
+    color: white;
+    border-color: var(--color-300);
+}
+
+.status-badge.completed {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    color: white;
+    border-color: #0f5132;
 }
