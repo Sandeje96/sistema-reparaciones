@@ -66,6 +66,23 @@ body {
 
 .footer {
     flex-shrink: 0;
+    background: #002F43 !important;
+    color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 -2px 20px rgba(0, 47, 67, 0.5);
+}
+
+.footer a {
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.2s ease-in-out;
+}
+
+.footer a:hover {
+    color: var(--color-400);
+    text-decoration: none;
+}
+
+.footer .text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
 }
 
 /* Navegación - COLOR #002F43 */
@@ -101,16 +118,79 @@ body {
     box-shadow: 0 2px 8px rgba(0, 144, 206, 0.3);
 }
 
-/* Alertas personalizadas - MANTENER NEUTRO */
+/* Textos de ayuda y elementos informativos */
+.form-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.875rem;
+}
+
+.form-text small {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Alertas adaptadas para fondo oscuro */
 .alert {
     border: none;
     border-radius: 0.5rem;
     box-shadow: var(--shadow-sm);
     margin-bottom: 1rem;
+    color: #ffffff;
 }
 
-.alert .bi {
-    font-size: 1.1em;
+.alert-info {
+    background: rgba(0, 144, 206, 0.15);
+    border-left: 4px solid var(--color-600);
+    color: #ffffff;
+}
+
+.alert-info .bi {
+    color: var(--color-400);
+}
+
+.alert-success {
+    background: rgba(25, 135, 84, 0.15);
+    border-left: 4px solid var(--success-color);
+    color: #ffffff;
+}
+
+.alert-warning {
+    background: rgba(255, 193, 7, 0.15);
+    border-left: 4px solid var(--warning-color);
+    color: #ffffff;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.15);
+    border-left: 4px solid var(--danger-color);
+    color: #ffffff;
+}
+
+/* Secciones con títulos */
+.border-bottom {
+    border-bottom-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+h6.text-success {
+    color: var(--color-400) !important;
+}
+
+h6.text-info {
+    color: var(--color-300) !important;
+}
+
+h6.text-primary {
+    color: var(--color-500) !important;
+}
+
+/* Placeholders en formularios */
+.form-control::placeholder,
+.form-select option {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Texto secundario */
+.text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
 }
 
 /* Botones - AZUL SOLO EN PRIMARY */
