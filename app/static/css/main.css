@@ -350,6 +350,37 @@ h6.text-primary {
     margin-bottom: 0.5rem;
 }
 
+/* Select dropdown options - CRÍTICO PARA FONDO OSCURO */
+.form-select option {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 0.5rem;
+}
+
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+    background-color: var(--color-700);
+    color: #ffffff;
+}
+
+/* Para navegadores webkit (Chrome, Safari, Edge) */
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+/* Estilos adicionales para select múltiple */
+select[multiple] option {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 0.375rem 0.75rem;
+}
+
+select[multiple] option:checked {
+    background-color: var(--color-600);
+    color: #ffffff;
+}
+
 /* Estados de validación */
 .was-validated .form-control:valid,
 .form-control.is-valid {
