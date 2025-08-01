@@ -46,6 +46,8 @@ cover/
 
 # Virtual environments
 .env
+.env.local
+.env.production
 .venv
 env/
 venv/
@@ -65,8 +67,6 @@ reparaciones.db
 
 # Archivos de configuración sensibles
 config_local.py
-.env.local
-.env.production
 
 # Logs
 *.log
@@ -102,12 +102,10 @@ temp/
 *.key
 *.crt
 
-# Archivos de migración (dependiendo del uso)
-migrations/versions/
-
-# Archivos de uploads (si los hay)
+# Archivos de uploads (solo en desarrollo)
 uploads/
 static/uploads/
+static/reports/
 
 # Node modules (si usas algún preprocessor)
 node_modules/
@@ -157,3 +155,12 @@ celerybeat.pid
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
