@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link href="{{ url_for('static', filename='css/repairs.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="bi bi-list-task text-primary me-2"></i>
+                    Lista de Reparaciones
+                </h1>
+                <p class="text-muted mb-0">
+                    Gestiona todas las reparaciones ordenadas por antigüedad
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('repairs.add') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Agregar Reparación
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtros y búsqueda -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <!-- Búsqueda -->
+                    <div class="col-md-4">
+                        {{ search_form.search(class="form-control", placeholder="Buscar cliente, equipo, marca...") }}
+                    </div>
+                    <!-- Filtro por estado -->
+                    <div class="col-md-3">
+                        {{ search_form.status_filter(class="form-select") }}
+                    </div>
+                    <!-- Filtro por prioridad -->
+                    <div class="col-md-3">
+                        {{ search_form.priority_filter(class="form-select") }}
+                    </div>
+                    <!-- Botón buscar -->
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Limpiar filtros -->
+                {% if search or status_filter or priority_filter %}
+                <div class="mt-3">
+                    <a href="{{ url_for('repairs.index') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-warning bg-opacity-10 border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">Falta Diagnóstico</h5>
+                        <p class="card-text fs-4 fw-bold" id="pending-diagnosis-count">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info bg-opacity-10 border-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock-history text-info fs-1"></i>
+                        <h5 class="card-title mt-2">Esperando Repuestos</h5>
+                        <p class="card-text fs-4 fw-bold" id="waiting-parts-count">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success bg-opacity-10 border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <h5 class="card-title mt-2">Listos para Entrega</h5>
+                        <p class="card-text fs-4 fw-bold" id="ready-delivery-count">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger bg-opacity-10 border-danger">
+                    <div class="card-body text-center">
+                        <i class="bi bi-alarm text-danger fs-1"></i>
+                        <h5 class="card-title mt-2">Urgentes</h5>
+                        <p class="card-text fs-4 fw-bold" id="urgent-count">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de reparaciones -->
+        {% if repairs.items %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="mb-0">
+                            <i class="bi bi-list-ul me-1"></i>
+                            Mostrando {{ repairs.items|length }} de {{ repairs.total }} reparaciones
+                        </h6>
+                    </div>
+                    <div class="col-auto">
+                        <small class="text-muted">
+                            Ordenado por antigüedad (más antiguos primero)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Versión móvil -->
+                <div class="d-md-none">
+                    {% for repair in repairs.items %}
+                    <div class="repair-card-mobile border-bottom p-3 {{ repair.get_priority_class() }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ repair.client_name }}</h6>
+                                <small class="text-muted">{{ repair.device_type }} - {{ repair.brand }} {{ repair.model }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge priority-badge-{{ repair.get_priority_class().split('-')[-1] }}">
+                                    {{ repair.get_priority_label() }}
+                                </span>
+                                <br>
+                                <small class="text-muted">{{ repair.days_since_entry() }} días</small>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-2 small">{{ repair.problem_description[:100] }}{% if repair.problem_description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <select class="form-select form-select-sm status-select" data-repair-id="{{ repair.id }}" style="max-width: 200px;">
+                                {% for status_code, status_name in repair.STATUS_CHOICES %}
+                                <option value="{{ status_code }}" {% if repair.status == status_code %}selected{% endif %}>
+                                    {{ status_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-file-text"></i>
+                                </a>
+                                {% if repair.status in ['delivered', 'no_repair'] %}
+                                <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Versión escritorio -->
+                <div class="d-none d-md-block">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 8%">Prioridad</th>
+                                    <th style="width: 15%">Cliente</th>
+                                    <th style="width: 20%">Equipo</th>
+                                    <th style="width: 25%">Problema</th>
+                                    <th style="width: 15%">Estado</th>
+                                    <th style="width: 10%">Días</th>
+                                    <th style="width: 7%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repair in repairs.items %}
+                                <tr class="repair-row {{ repair.get_priority_class() }}">
+                                    <td>
+                                        <span class="badge priority-badge-{{ repair.get_priority_class().split('-')[-1] }}">
+                                            {{ repair.get_priority_label() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ repair.client_name }}</div>
+                                        {% if repair.client_phone %}
+                                        <small class="text-muted">{{ repair.client_phone }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ repair.device_type }}</div>
+                                        <small class="text-muted">{{ repair.brand }} {{ repair.model }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="problem-text">
+                                            {{ repair.problem_description[:80] }}{% if repair.problem_description|length > 80 %}...{% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm status-select" data-repair-id="{{ repair.id }}">
+                                            {% for status_code, status_name in repair.STATUS_CHOICES %}
+                                            <option value="{{ status_code }}" {% if repair.status == status_code %}selected{% endif %}>
+                                                {{ status_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ repair.days_since_entry() }}</span>
+                                        <small class="text-muted d-block">días</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-outline-success btn-sm">
+                                                <i class="bi bi-file-text"></i>
+                                            </a>
+                                            {% if repair.status in ['delivered', 'no_repair'] %}
+                                            <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        {% if repairs.pages > 1 %}
+        <nav aria-label="Paginación de reparaciones" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Anterior -->
+                {% if repairs.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('repairs.index', page=repairs.prev_num, search=search, status_filter=status_filter, priority_filter=priority_filter) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                </li>
+                {% endif %}
+
+                <!-- Páginas -->
+                {% for page_num in repairs.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != repairs.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('repairs.index', page=page_num, search=search, status_filter=status_filter, priority_filter=priority_filter) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Siguiente -->
+                {% if repairs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('repairs.index', page=repairs.next_num, search=search, status_filter=status_filter, priority_filter=priority_filter) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <!-- Sin reparaciones -->
+        <div class="text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-muted">No hay reparaciones</h4>
+            <p class="text-muted">
+                {% if search or status_filter or priority_filter %}
+                No se encontraron reparaciones con los filtros aplicados.
+                {% else %}
+                Comienza agregando tu primera reparación.
+                {% endif %}
+            </p>
+            {% if not search and not status_filter and not priority_filter %}
+            <a href="{{ url_for('repairs.add') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Agregar Reparación
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta reparación?</p>
+                <div class="alert alert-warning">
+                    <strong>Cliente:</strong> <span id="delete-client"></span><br>
+                    <strong>Equipo:</strong> <span id="delete-device"></span>
+                </div>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="delete-form" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/repairs.js') }}"></script>
+{% endblock %}
