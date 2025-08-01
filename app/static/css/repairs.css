@@ -166,6 +166,10 @@
     background: rgba(0, 79, 113, 0.3);
 }
 
+.text-muted {
+    color: #ffffff;
+}
+
 .table tbody td {
     border-bottom: 1px solid rgba(44, 192, 255, 0.2);
     color: #ffffff;
