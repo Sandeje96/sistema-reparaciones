@@ -93,21 +93,6 @@
         <!-- Lista de informes -->
         {% if reports.items %}
         <div class="card">
-            <div class="card-header bg-light">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h6 class="mb-0">
-                            <i class="bi bi-list-ul me-1"></i>
-                            Mostrando {{ reports.items|length }} de {{ reports.total }} informes
-                        </h6>
-                    </div>
-                    <div class="col-auto">
-                        <small class="text-muted">
-                            Ordenado por fecha (más recientes primero)
-                        </small>
-                    </div>
-                </div>
-            </div>
             <div class="card-body p-0">
                 <!-- Versión móvil -->
                 <div class="d-md-none">
