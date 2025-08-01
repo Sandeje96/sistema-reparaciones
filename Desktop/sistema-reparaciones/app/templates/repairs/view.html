@@ -30,6 +30,9 @@
                     <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-primary">
                         <i class="bi bi-pencil me-1"></i>Editar
                     </a>
+                    <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-success">
+                        <i class="bi bi-file-text me-1"></i>Crear Informe
+                    </a>
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
                         <span class="visually-hidden">Más opciones</span>
                     </button>
@@ -45,7 +48,6 @@
                         {% endif %}
                     </ul>
                 </div>
-            </div>
             
             <!-- Estado y prioridad -->
             <div class="row">

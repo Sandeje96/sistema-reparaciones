@@ -73,6 +73,13 @@ class Repair(db.Model):
     diagnosis_notes = db.Column(db.Text, nullable=True)
     repair_cost = db.Column(db.Float, nullable=True)
     parts_needed = db.Column(db.Text, nullable=True)
+
+    # AGREGAR ESTOS NUEVOS CAMPOS:
+    # Información adicional para informes técnicos
+    insurance_company = db.Column(db.String(100), nullable=True)
+    insured_company = db.Column(db.String(100), nullable=True)
+    claim_number = db.Column(db.String(50), nullable=True)
+    incident_date = db.Column(db.Date, nullable=True)
     
     # Fechas
     entry_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)

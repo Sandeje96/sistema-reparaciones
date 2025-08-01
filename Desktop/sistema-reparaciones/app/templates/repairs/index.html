@@ -156,6 +156,9 @@
                                 <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-file-text"></i>
+                                </a>
                                 {% if repair.status in ['delivered', 'no_repair'] %}
                                 <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}">
                                     <i class="bi bi-trash"></i>
@@ -220,14 +223,17 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-primary btn-sm" title="Ver">
+                                            <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm" title="Editar">
+                                            <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
+                                            <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-outline-success btn-sm">
+                                                <i class="bi bi-file-text"></i>
+                                            </a>
                                             {% if repair.status in ['delivered', 'no_repair'] %}
-                                            <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}" title="Eliminar">
+                                            <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                             {% endif %}

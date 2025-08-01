@@ -5,6 +5,7 @@ Formularios para gestión de reparaciones.
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, FloatField, SubmitField
+from wtforms.fields import DateField
 from wtforms.validators import DataRequired, Length, Optional, NumberRange
 from app.models import Repair
 
@@ -65,10 +66,33 @@ class RepairForm(FlaskForm):
         NumberRange(min=0, message='El costo debe ser un número positivo')
     ])
     
+    # Después de estas líneas:
     parts_needed = TextAreaField('Repuestos Necesarios', validators=[
         Optional(),
         Length(max=500, message='Los repuestos no pueden tener más de 500 caracteres')
     ])
+
+    # AGREGAR ESTOS NUEVOS CAMPOS:
+    # Información adicional para informes técnicos (opcional)
+    insurance_company = StringField('Compañía de Seguros', validators=[
+        Optional(),
+        Length(max=100, message='No puede tener más de 100 caracteres')
+    ])
+
+    insured_company = StringField('Empresa Asegurada', validators=[
+        Optional(),
+        Length(max=100, message='No puede tener más de 100 caracteres')
+    ])
+
+    claim_number = StringField('Número de Siniestro', validators=[
+        Optional(),
+        Length(max=50, message='No puede tener más de 50 caracteres')
+    ])
+
+    
+    incident_date = StringField('Fecha del Siniestro', validators=[
+        Optional()
+    ], render_kw={"type": "date"})
     
     submit = SubmitField('Guardar')
 

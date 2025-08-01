@@ -117,6 +117,90 @@ def create():
     
     return render_template('informes/create.html', title='Crear Informe Técnico', form=form)
 
+@bp.route('/create-from-repair/<int:repair_id>', methods=['GET', 'POST'])
+@login_required
+def create_from_repair(repair_id):
+    """Crear nuevo informe técnico basado en una reparación existente."""
+    
+    from app.models import Repair
+    repair = Repair.query.get_or_404(repair_id)
+    
+    form = TechnicalReportForm()
+    
+    # Pre-llenar el formulario con datos de la reparación
+    if request.method == 'GET':
+        # Datos del seguro (si están disponibles)
+        if repair.insurance_company:
+            form.insurance_company.data = repair.insurance_company
+        if repair.insured_company:
+            form.insured_company.data = repair.insured_company
+        if repair.claim_number:
+            form.claim_number.data = repair.claim_number
+        if repair.incident_date:
+            form.incident_date.data = repair.incident_date
+        
+        # Datos del equipo (desde la reparación)
+        form.device_type.data = repair.device_type
+        form.brand.data = repair.brand
+        form.model.data = repair.model
+        if repair.serial_number:
+            form.serial_number.data = repair.serial_number
+        form.problem_description.data = repair.problem_description
+        
+        # Usar el diagnóstico como base para el informe técnico
+        if repair.diagnosis_notes:
+            form.technical_diagnosis.data = repair.diagnosis_notes
+    
+    if form.validate_on_submit():
+        try:
+            # Crear nuevo informe
+            report = TechnicalReport(
+                insurance_company=form.insurance_company.data,
+                insured_company=form.insured_company.data,
+                claim_number=form.claim_number.data,
+                incident_date=form.incident_date.data,
+                device_type=form.device_type.data,
+                brand=form.brand.data,
+                model=form.model.data,
+                serial_number=form.serial_number.data,
+                problem_description=form.problem_description.data,
+                technical_diagnosis=form.technical_diagnosis.data,
+                diagnosis_price=form.diagnosis_price.data,
+                repair_price=form.repair_price.data,
+                technician_name=form.technician_name.data,
+                professional_license=form.professional_license.data,
+                created_by=current_user.id
+            )
+            
+            # Guardar en base de datos para obtener ID
+            db.session.add(report)
+            db.session.flush()  # Flush para obtener el ID sin commit
+            
+            # Procesar imágenes subidas
+            images_saved = 0
+            for i, image_field in enumerate([form.image1, form.image2, form.image3], 1):
+                if image_field.data and image_field.data.filename:
+                    filename = save_uploaded_image(image_field.data, report.uuid, i)
+                    if filename:
+                        setattr(report, f'image{i}_filename', filename)
+                        images_saved += 1
+            
+            # Commit final
+            db.session.commit()
+            
+            flash(f'Informe técnico creado desde reparación #{repair_id}. Se guardaron {images_saved} imágenes.', 'success')
+            return redirect(url_for('informes.view', id=report.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('Error al crear el informe. Inténtalo de nuevo.', 'error')
+            print(f"Error creando informe desde reparación: {e}")  # Para debugging
+    
+    return render_template('informes/create_from_repair.html', 
+                         title=f'Crear Informe desde Reparación #{repair_id}', 
+                         form=form, 
+                         repair=repair)
+
 @bp.route('/view/<int:id>')
 @login_required
 def view(id):

@@ -11,6 +11,18 @@ from app.repairs.forms import RepairForm, SearchForm, QuickStatusForm
 from app.models import Repair
 from app import db
 
+def parse_date_string(date_string):
+    """Convertir string de fecha a objeto date."""
+    if not date_string or date_string.strip() == '':
+        return None
+    try:
+        from datetime import datetime
+        # Convertir string YYYY-MM-DD a objeto date
+        return datetime.strptime(date_string.strip(), '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        # Si hay cualquier error, devolver None
+        return None
+
 @bp.route('/')
 @login_required
 def index():
@@ -97,38 +109,60 @@ def add():
     form.status.data = Repair.PENDING_DIAGNOSIS  # Estado por defecto
     
     if form.validate_on_submit():
-        repair = Repair(
-            client_name=form.client_name.data,
-            client_phone=form.client_phone.data,
-            device_type=form.device_type.data,
-            brand=form.brand.data,
-            model=form.model.data,
-            serial_number=form.serial_number.data,
-            problem_description=form.problem_description.data,
-            status=form.status.data,
-            diagnosis_notes=form.diagnosis_notes.data,
-            repair_cost=form.repair_cost.data,
-            parts_needed=form.parts_needed.data,
-            created_by=current_user.id
-        )
-        
-        # Establecer fechas según el estado
-        if form.status.data == Repair.DIAGNOSED:
-            repair.diagnosis_date = datetime.utcnow()
-        elif form.status.data in [Repair.READY_FOR_DELIVERY, Repair.DELIVERED]:
-            repair.diagnosis_date = datetime.utcnow()
-            repair.completion_date = datetime.utcnow()
-            if form.status.data == Repair.DELIVERED:
-                repair.delivery_date = datetime.utcnow()
-        
         try:
+            # Procesar fecha de incidente
+            incident_date_obj = None
+            if form.incident_date.data:
+                incident_date_obj = parse_date_string(form.incident_date.data)
+                print(f"📅 Fecha procesada: {incident_date_obj} (tipo: {type(incident_date_obj)})")
+            
+            # Crear objeto reparación
+            repair = Repair(
+                client_name=form.client_name.data,
+                client_phone=form.client_phone.data,
+                device_type=form.device_type.data,
+                brand=form.brand.data,
+                model=form.model.data,
+                serial_number=form.serial_number.data,
+                problem_description=form.problem_description.data,
+                status=form.status.data,
+                diagnosis_notes=form.diagnosis_notes.data,
+                repair_cost=form.repair_cost.data,
+                parts_needed=form.parts_needed.data,
+                # Nuevos campos para informes técnicos
+                insurance_company=form.insurance_company.data if form.insurance_company.data else None,
+                insured_company=form.insured_company.data if form.insured_company.data else None,
+                claim_number=form.claim_number.data if form.claim_number.data else None,
+                incident_date=incident_date_obj,  # Usar el objeto date procesado
+                created_by=current_user.id
+            )
+            
+            print(f"🔍 Intentando guardar reparación...")
+            print(f"📝 Cliente: {repair.client_name}")
+            print(f"📅 Fecha incidente: {repair.incident_date} (tipo: {type(repair.incident_date)})")
+            
+            # Establecer fechas según el estado
+            if form.status.data == Repair.DIAGNOSED:
+                repair.diagnosis_date = datetime.utcnow()
+            elif form.status.data in [Repair.READY_FOR_DELIVERY, Repair.DELIVERED]:
+                repair.diagnosis_date = datetime.utcnow()
+                repair.completion_date = datetime.utcnow()
+                if form.status.data == Repair.DELIVERED:
+                    repair.delivery_date = datetime.utcnow()
+            
             db.session.add(repair)
             db.session.commit()
+            
+            print(f"✅ Reparación guardada con ID: {repair.id}")
             flash(f'Reparación agregada: {repair.client_name} - {repair.device_type}', 'success')
             return redirect(url_for('repairs.index'))
+            
         except Exception as e:
             db.session.rollback()
-            flash('Error al agregar la reparación. Inténtalo de nuevo.', 'error')
+            print(f"❌ Error detallado: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            flash(f'Error al agregar la reparación: {str(e)}', 'error')
     
     return render_template('repairs/add.html', title='Agregar Reparación', form=form)
 
@@ -140,28 +174,57 @@ def edit(id):
     repair = Repair.query.get_or_404(id)
     form = RepairForm(obj=repair)
     
+    # Pre-llenar campos adicionales en GET request
+    if request.method == 'GET':
+        if repair.incident_date:
+            form.incident_date.data = repair.incident_date.strftime('%Y-%m-%d')
+    
     if form.validate_on_submit():
         old_status = repair.status
         
-        # Actualizar datos
-        form.populate_obj(repair)
-        repair.updated_at = datetime.utcnow()
-        
-        # Actualizar fechas según cambios de estado
-        if old_status != form.status.data:
-            if form.status.data == Repair.DIAGNOSED and not repair.diagnosis_date:
-                repair.diagnosis_date = datetime.utcnow()
-            elif form.status.data in [Repair.READY_FOR_DELIVERY] and not repair.completion_date:
-                repair.completion_date = datetime.utcnow()
-            elif form.status.data == Repair.DELIVERED and not repair.delivery_date:
-                repair.delivery_date = datetime.utcnow()
-        
         try:
+            # Actualizar datos manualmente para manejar las fechas correctamente
+            repair.client_name = form.client_name.data
+            repair.client_phone = form.client_phone.data
+            repair.device_type = form.device_type.data
+            repair.brand = form.brand.data
+            repair.model = form.model.data
+            repair.serial_number = form.serial_number.data
+            repair.problem_description = form.problem_description.data
+            repair.status = form.status.data
+            repair.diagnosis_notes = form.diagnosis_notes.data
+            repair.repair_cost = form.repair_cost.data
+            repair.parts_needed = form.parts_needed.data
+            
+            # Campos de seguro
+            repair.insurance_company = form.insurance_company.data if form.insurance_company.data else None
+            repair.insured_company = form.insured_company.data if form.insured_company.data else None
+            repair.claim_number = form.claim_number.data if form.claim_number.data else None
+            
+            # Procesar fecha de incidente
+            if form.incident_date.data:
+                repair.incident_date = parse_date_string(form.incident_date.data)
+            else:
+                repair.incident_date = None
+                
+            repair.updated_at = datetime.utcnow()
+            
+            # Actualizar fechas según cambios de estado
+            if old_status != form.status.data:
+                if form.status.data == Repair.DIAGNOSED and not repair.diagnosis_date:
+                    repair.diagnosis_date = datetime.utcnow()
+                elif form.status.data in [Repair.READY_FOR_DELIVERY] and not repair.completion_date:
+                    repair.completion_date = datetime.utcnow()
+                elif form.status.data == Repair.DELIVERED and not repair.delivery_date:
+                    repair.delivery_date = datetime.utcnow()
+            
             db.session.commit()
             flash(f'Reparación actualizada: {repair.client_name} - {repair.device_type}', 'success')
             return redirect(url_for('repairs.index'))
+            
         except Exception as e:
             db.session.rollback()
+            print(f"❌ Error actualizando: {str(e)}")
             flash('Error al actualizar la reparación. Inténtalo de nuevo.', 'error')
     
     return render_template('repairs/edit.html', title='Editar Reparación', form=form, repair=repair)
