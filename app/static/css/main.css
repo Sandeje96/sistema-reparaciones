@@ -68,10 +68,16 @@ body {
     flex-shrink: 0;
 }
 
-/* Navegación - APLICAR AZUL AQUÍ */
+/* Navegación - COLOR #002F43 */
+.navbar {
+    background: #002F43 !important;
+    box-shadow: 0 2px 20px rgba(0, 47, 67, 0.5);
+}
+
 .navbar-brand {
     font-weight: 700;
     letter-spacing: -0.5px;
+    color: #ffffff !important;
 }
 
 .navbar-nav .nav-link {
@@ -80,16 +86,19 @@ body {
     border-radius: 0.375rem;
     margin: 0 0.125rem;
     transition: all 0.2s ease-in-out;
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .navbar-nav .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-1px);
+    color: #ffffff !important;
 }
 
 .navbar-nav .nav-link.active {
-    background-color: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
     color: white !important;
+    box-shadow: 0 2px 8px rgba(0, 144, 206, 0.3);
 }
 
 /* Alertas personalizadas - MANTENER NEUTRO */
