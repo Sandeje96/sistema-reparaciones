@@ -43,7 +43,7 @@
     --shadow-blue: 0 0.5rem 1rem rgba(0, 144, 206, 0.2);
 }
 
-/* Layout principal - FONDO NEUTRO */
+/* Layout principal - FONDO OSCURO */
 html, body {
     height: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -52,10 +52,11 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
-    background-color: #f8f9fa;
-    /* Gradiente muy sutil solo si es necesario */
-    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+    background: #000000;
+    /* Gradiente sutil desde negro puro a gris muy oscuro */
+    background: linear-gradient(180deg, #000000 0%, #1a1a1a 100%);
     min-height: 100vh;
+    color: #ffffff;
 }
 
 .main-content {
@@ -159,25 +160,29 @@ body {
     color: white;
 }
 
-/* Cards - FONDOS NEUTROS CON ACENTOS AZULES SUTILES */
+/* Cards - ADAPTADAS PARA FONDO OSCURO */
 .card {
     border: none;
     border-radius: 0.75rem;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease-in-out;
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .card:hover {
-    box-shadow: var(--shadow);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.7);
     transform: translateY(-2px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .card-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid #dee2e6;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-weight: 600;
-    color: var(--dark-color);
+    color: #ffffff;
 }
 
 /* Solo cards especiales con acento azul */
@@ -186,27 +191,33 @@ body {
 }
 
 .card-primary .card-header {
-    background: linear-gradient(135deg, var(--color-50) 0%, #f8f9fa 100%);
-    color: var(--color-800);
+    background: rgba(0, 144, 206, 0.2);
+    color: #ffffff;
 }
 
-/* Formularios - ACENTOS AZULES SUTILES */
+/* Formularios - ADAPTADOS PARA FONDO OSCURO */
 .form-control, .form-select {
     border-radius: 0.5rem;
-    border: 1px solid #ced4da;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.2s ease-in-out;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .form-control:focus, .form-select:focus {
     border-color: var(--color-600);
     box-shadow: 0 0 0 0.2rem rgba(0, 144, 206, 0.25);
     transform: scale(1.01);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .form-label {
     font-weight: 600;
-    color: var(--dark-color);
+    color: #ffffff;
     margin-bottom: 0.5rem;
 }
 
