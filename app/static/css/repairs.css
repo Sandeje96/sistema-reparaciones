@@ -140,42 +140,47 @@
     border-color: #146c43;
 }
 
-/* Tablas - ADAPTADAS PARA FONDO OSCURO */
+/* Tablas - COLOR FUERTE CON PALETA AZUL */
 .table {
-    background: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, var(--color-800) 0%, var(--color-900) 100%);
     backdrop-filter: blur(10px);
     border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
     color: #ffffff;
+    border: 1px solid var(--color-600);
 }
 
 .table thead th {
-    background: var(--color-600);
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
     color: white;
     font-weight: 600;
     border: none;
     padding: 1rem 0.75rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .table tbody tr {
     border: none;
     color: #ffffff;
+    background: rgba(0, 79, 113, 0.3);
 }
 
 .table tbody td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(44, 192, 255, 0.2);
     color: #ffffff;
     vertical-align: middle;
     padding: 1rem 0.75rem;
 }
 
 .table tbody tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 112, 160, 0.2);
 }
 
 .table tbody tr:hover {
-    background-color: rgba(0, 144, 206, 0.1);
+    background: linear-gradient(135deg, var(--color-700) 0%, var(--color-800) 100%);
+    transform: scale(1.002);
+    box-shadow: 0 4px 12px rgba(0, 144, 206, 0.3);
 }
 
 /* Botones de acción - SUTILES */
