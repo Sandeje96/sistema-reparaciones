@@ -185,7 +185,7 @@ code.text-primary {
 
 /* Códigos de siniestro */
 code.text-primary {
-    background-color: rgba(13, 110, 253, 0.1);
+    background-color: #ffffff;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
     font-weight: 600;
