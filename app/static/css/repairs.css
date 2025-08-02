@@ -414,7 +414,7 @@
 }
 
 .timeline-item.completed .timeline-marker {
-    background: var(--color-400);
+    background: rgba(0, 79, 113, 0.4) !important;
     border-color: #ffffff;
     box-shadow: 0 0 0 3px var(--color-600), 0 0 20px rgba(44, 192, 255, 0.6);
 }
@@ -426,7 +426,7 @@
 }
 
 .timeline-content {
-    background: rgba(0, 79, 113, 0.4);
+    background: rgba(0, 79, 113, 0.4) !important;
     padding: 20px;
     border-radius: 12px;
     border-left: 4px solid var(--color-400);
