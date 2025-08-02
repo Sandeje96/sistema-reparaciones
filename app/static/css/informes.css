@@ -18,6 +18,11 @@
     transition: all 0.2s ease-in-out;
 }
 
+.text-muted {
+    --bs-text-opacity: 1;
+    color: white !important;
+}
+
 .report-row:hover {
     background-color: rgba(13, 110, 253, 0.05);
     transform: scale(1.005);
