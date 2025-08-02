@@ -29,6 +29,65 @@
     padding: 1rem 0.75rem;
 }
 
+/* TABLA DE INFORMES - COPIANDO ESTILOS DE REPAIRS EXACTOS */
+.table {
+    background: linear-gradient(135deg, var(--color-800) 0%, var(--color-900) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    border: 1px solid var(--color-600);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--color-600) 0%, var(--color-700) 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 1rem 0.75rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.table tbody tr {
+    border: none;
+    color: #ffffff;
+    background: rgba(0, 79, 113, 0.3);
+}
+
+.table tbody td {
+    border-bottom: 1px solid rgba(44, 192, 255, 0.2);
+    color: #ffffff;
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+    background: rgba(0, 79, 113, 0.3);
+}
+
+.table tbody tr:nth-child(even) {
+    background: rgba(0, 112, 160, 0.2);
+}
+
+.table tbody tr:hover {
+    background: linear-gradient(135deg, var(--color-700) 0%, var(--color-800) 100%);
+    transform: scale(1.002);
+    box-shadow: 0 4px 12px rgba(0, 144, 206, 0.3);
+}
+
+/* Variables CSS de colores azules (necesarias para la tabla) */
+:root {
+    --color-50: #E6F7FF;
+    --color-100: #B7E9FF;
+    --color-200: #89DCFF;
+    --color-300: #5ACEFF;
+    --color-400: #2CC0FF;
+    --color-500: #00B1FC;
+    --color-600: #0090CE;
+    --color-700: #0070A0;
+    --color-800: #004F71;
+    --color-900: #002F43;
+    --color-950: #000E14;
+}
+
 /* Botones de acción */
 .btn-group-sm .btn {
     padding: 0.375rem 0.5rem;
@@ -281,6 +340,11 @@ code.text-primary {
 
 .slide-in-left {
     animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive específico para informes */
