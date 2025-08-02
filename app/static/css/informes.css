@@ -18,6 +18,13 @@
     transition: all 0.2s ease-in-out;
 }
 
+code.text-primary {
+    background-color: #dee2e6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+
 .text-muted {
     --bs-text-opacity: 1;
     color: white !important;
