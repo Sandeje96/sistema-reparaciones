@@ -31,4 +31,4 @@ Pillow==10.4.0
 python-dateutil==2.8.2
 
 # Conexión PostgreSQL
-psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.10
