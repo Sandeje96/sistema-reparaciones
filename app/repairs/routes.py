@@ -1,348 +1,280 @@
 # app/repairs/routes.py
 """
-Rutas para gestión de reparaciones.
+Rutas para la gestión de vehículos y reparaciones en el Taller Mecánico Don Orlando.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app.repairs import bp
-from app.repairs.forms import RepairForm, SearchForm, QuickStatusForm
+from app.repairs.forms import RepairForm, DiagnosisWorkForm, SearchForm
 from app.models import Repair
 from app import db
 
-def parse_date_string(date_string):
-    """Convertir string de fecha a objeto date."""
-    if not date_string or date_string.strip() == '':
-        return None
-    try:
-        from datetime import datetime
-        # Convertir string YYYY-MM-DD a objeto date
-        return datetime.strptime(date_string.strip(), '%Y-%m-%d').date()
-    except (ValueError, TypeError):
-        # Si hay cualquier error, devolver None
-        return None
 
 @bp.route('/')
 @login_required
 def index():
-    """Lista principal de reparaciones."""
-    
-    # Formulario de búsqueda
+    """Panel principal de vehículos en taller."""
     search_form = SearchForm()
     
-    # Parámetros de búsqueda y filtros
+    # Parámetros de consulta
     page = request.args.get('page', 1, type=int)
-    search = request.args.get('search', '')
-    status_filter = request.args.get('status_filter', '')
-    priority_filter = request.args.get('priority_filter', '')
+    search = request.args.get('search', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    filter_active = request.args.get('filter_active', 'in_shop').strip()
+    sort_by = request.args.get('sort_by', 'entry_asc')  # entry_asc = más tiempo en taller primero
     
-    # Construir query base
     query = Repair.query
     
-    # Aplicar filtro de búsqueda
+    # Búsqueda por texto (patente, cliente, marca, modelo, problema)
     if search:
-        search_term = f'%{search}%'
+        clean_search = Repair.clean_plate(search)
+        search_like = f"%{search}%"
+        filters = [
+            Repair.client_name.ilike(search_like),
+            Repair.brand.ilike(search_like),
+            Repair.model.ilike(search_like),
+            Repair.problem_description.ilike(search_like),
+            Repair.diagnosis.ilike(search_like)
+        ]
+        if clean_search:
+            filters.append(Repair.license_plate.ilike(f"%{clean_search}%"))
+        query = query.filter(db.or_(*filters))
+    
+    # Filtro de permanencia
+    now = datetime.utcnow()
+    seven_days_ago = now - timedelta(days=7)
+    
+    if filter_active == 'in_shop':
+        query = query.filter(Repair.status != Repair.STATUS_ENTREGADO)
+    elif filter_active == 'overdue':
         query = query.filter(
-            db.or_(
-                Repair.client_name.ilike(search_term),
-                Repair.device_type.ilike(search_term),
-                Repair.brand.ilike(search_term),
-                Repair.model.ilike(search_term),
-                Repair.problem_description.ilike(search_term)
-            )
+            Repair.status != Repair.STATUS_ENTREGADO,
+            Repair.entry_date <= seven_days_ago
         )
+    elif filter_active == 'delivered':
+        query = query.filter(Repair.status == Repair.STATUS_ENTREGADO)
     
-    # Aplicar filtro de estado
+    # Filtro por estado puntual
     if status_filter:
-        if status_filter == 'active':
-            query = query.filter(~Repair.status.in_([Repair.DELIVERED, Repair.NO_REPAIR]))
-        else:
-            query = query.filter(Repair.status == status_filter)
-    
-    # Aplicar filtro de prioridad
-    if priority_filter:
-        from datetime import timedelta
-        now = datetime.utcnow()
+        query = query.filter(Repair.status == status_filter)
         
-        if priority_filter == 'high':
-            cutoff_date = now - timedelta(days=15)
-            query = query.filter(Repair.entry_date <= cutoff_date)
-        elif priority_filter == 'medium':
-            start_date = now - timedelta(days=14)
-            end_date = now - timedelta(days=7)
-            query = query.filter(Repair.entry_date.between(end_date, start_date))
-        elif priority_filter == 'low':
-            cutoff_date = now - timedelta(days=7)
-            query = query.filter(Repair.entry_date >= cutoff_date)
+    # Ordenamiento
+    if sort_by == 'entry_asc':
+        # Más días en taller primero (fecha de entrada más antigua)
+        query = query.order_by(Repair.entry_date.asc())
+    elif sort_by == 'entry_desc':
+        # Recientes primero
+        query = query.order_by(Repair.entry_date.desc())
+    elif sort_by == 'plate':
+        query = query.order_by(Repair.license_plate.asc())
+    else:
+        query = query.order_by(Repair.entry_date.asc())
+        
+    per_page = 15
+    repairs = query.paginate(page=page, per_page=per_page, error_out=False)
     
-    # Ordenar por fecha de ingreso (más antiguos primero)
-    query = query.order_by(Repair.entry_date.asc())
+    # Métricas rápidas de taller para la cabecera
+    total_in_shop = Repair.query.filter(Repair.status != Repair.STATUS_ENTREGADO).count()
+    pending_diagnosis = Repair.query.filter(Repair.status == Repair.STATUS_INGRESADO).count()
+    in_repair = Repair.query.filter(Repair.status == Repair.STATUS_EN_REPARACION).count()
+    ready_count = Repair.query.filter(Repair.status == Repair.STATUS_LISTO).count()
+    overdue_count = Repair.query.filter(
+        Repair.status != Repair.STATUS_ENTREGADO,
+        Repair.entry_date <= seven_days_ago
+    ).count()
     
-    # Paginación
-    per_page = 20
-    repairs = query.paginate(
-        page=page, 
-        per_page=per_page, 
-        error_out=False
+    # Prellenar formulario
+    search_form.search.data = search
+    search_form.status.data = status_filter
+    search_form.filter_active.data = filter_active
+    
+    return render_template(
+        'repairs/index.html',
+        repairs=repairs,
+        search_form=search_form,
+        search=search,
+        status_filter=status_filter,
+        filter_active=filter_active,
+        sort_by=sort_by,
+        stats={
+            'total_in_shop': total_in_shop,
+            'pending_diagnosis': pending_diagnosis,
+            'in_repair': in_repair,
+            'ready': ready_count,
+            'overdue': overdue_count
+        }
     )
-    
-    # Prellenar formulario de búsqueda
-    if request.method == 'GET':
-        search_form.search.data = search
-        search_form.status_filter.data = status_filter
-        search_form.priority_filter.data = priority_filter
-    
-    return render_template('repairs/index.html', 
-                         repairs=repairs, 
-                         search_form=search_form,
-                         search=search,
-                         status_filter=status_filter,
-                         priority_filter=priority_filter)
+
 
 @bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
-    """Agregar nueva reparación."""
-    
+    """Registrar un nuevo vehículo que ingresa al taller."""
     form = RepairForm()
-    form.status.data = Repair.PENDING_DIAGNOSIS  # Estado por defecto
     
     if form.validate_on_submit():
-        try:
-            # Procesar fecha de incidente
-            incident_date_obj = None
-            if form.incident_date.data:
-                incident_date_obj = parse_date_string(form.incident_date.data)
-                print(f"📅 Fecha procesada: {incident_date_obj} (tipo: {type(incident_date_obj)})")
-            
-            # Crear objeto reparación
-            repair = Repair(
-                client_name=form.client_name.data,
-                client_phone=form.client_phone.data,
-                device_type=form.device_type.data,
-                brand=form.brand.data,
-                model=form.model.data,
-                serial_number=form.serial_number.data,
-                problem_description=form.problem_description.data,
-                status=form.status.data,
-                diagnosis_notes=form.diagnosis_notes.data,
-                repair_cost=form.repair_cost.data,
-                parts_needed=form.parts_needed.data,
-                # Nuevos campos para informes técnicos
-                insurance_company=form.insurance_company.data if form.insurance_company.data else None,
-                insured_company=form.insured_company.data if form.insured_company.data else None,
-                claim_number=form.claim_number.data if form.claim_number.data else None,
-                incident_date=incident_date_obj,  # Usar el objeto date procesado
-                created_by=current_user.id
-            )
-            
-            print(f"🔍 Intentando guardar reparación...")
-            print(f"📝 Cliente: {repair.client_name}")
-            print(f"📅 Fecha incidente: {repair.incident_date} (tipo: {type(repair.incident_date)})")
-            
-            # Establecer fechas según el estado
-            if form.status.data == Repair.DIAGNOSED:
-                repair.diagnosis_date = datetime.utcnow()
-            elif form.status.data in [Repair.READY_FOR_DELIVERY, Repair.DELIVERED]:
-                repair.diagnosis_date = datetime.utcnow()
-                repair.completion_date = datetime.utcnow()
-                if form.status.data == Repair.DELIVERED:
-                    repair.delivery_date = datetime.utcnow()
-            
-            db.session.add(repair)
-            db.session.commit()
-            
-            print(f"✅ Reparación guardada con ID: {repair.id}")
-            flash(f'Reparación agregada: {repair.client_name} - {repair.device_type}', 'success')
-            return redirect(url_for('repairs.index'))
-            
-        except Exception as e:
-            db.session.rollback()
-            print(f"❌ Error detallado: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            flash(f'Error al agregar la reparación: {str(e)}', 'error')
-    
-    return render_template('repairs/add.html', title='Agregar Reparación', form=form)
-
-@bp.route('/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
-def edit(id):
-    """Editar reparación existente."""
-    
-    repair = Repair.query.get_or_404(id)
-    form = RepairForm(obj=repair)
-    
-    # Pre-llenar campos adicionales en GET request
-    if request.method == 'GET':
-        if repair.incident_date:
-            form.incident_date.data = repair.incident_date.strftime('%Y-%m-%d')
-    
-    if form.validate_on_submit():
-        old_status = repair.status
+        clean_plate = Repair.clean_plate(form.license_plate.data)
         
-        try:
-            # Actualizar datos manualmente para manejar las fechas correctamente
-            repair.client_name = form.client_name.data
-            repair.client_phone = form.client_phone.data
-            repair.device_type = form.device_type.data
-            repair.brand = form.brand.data
-            repair.model = form.model.data
-            repair.serial_number = form.serial_number.data
-            repair.problem_description = form.problem_description.data
-            repair.status = form.status.data
-            repair.diagnosis_notes = form.diagnosis_notes.data
-            repair.repair_cost = form.repair_cost.data
-            repair.parts_needed = form.parts_needed.data
+        vehicle = Repair(
+            license_plate=clean_plate,
+            brand=form.brand.data.strip(),
+            model=form.model.data.strip(),
+            year=form.year.data,
+            color=form.color.data.strip() if form.color.data else None,
+            mileage=form.mileage.data,
+            client_name=form.client_name.data.strip(),
+            client_phone=form.client_phone.data.strip() if form.client_phone.data else None,
+            client_email=form.client_email.data.strip() if form.client_email.data else None,
+            problem_description=form.problem_description.data.strip(),
+            diagnosis=form.diagnosis.data.strip() if form.diagnosis.data else None,
+            work_to_do=form.work_to_do.data.strip() if form.work_to_do.data else None,
+            parts_needed=form.parts_needed.data.strip() if form.parts_needed.data else None,
+            status=form.status.data,
+            estimated_cost=form.estimated_cost.data,
+            final_cost=form.final_cost.data,
+            entry_date=datetime.utcnow(),
+            created_by=current_user.id
+        )
+        
+        if vehicle.diagnosis:
+            vehicle.diagnosis_date = datetime.utcnow()
             
-            # Campos de seguro
-            repair.insurance_company = form.insurance_company.data if form.insurance_company.data else None
-            repair.insured_company = form.insured_company.data if form.insured_company.data else None
-            repair.claim_number = form.claim_number.data if form.claim_number.data else None
-            
-            # Procesar fecha de incidente
-            if form.incident_date.data:
-                repair.incident_date = parse_date_string(form.incident_date.data)
-            else:
-                repair.incident_date = None
-                
-            repair.updated_at = datetime.utcnow()
-            
-            # Actualizar fechas según cambios de estado
-            if old_status != form.status.data:
-                if form.status.data == Repair.DIAGNOSED and not repair.diagnosis_date:
-                    repair.diagnosis_date = datetime.utcnow()
-                elif form.status.data in [Repair.READY_FOR_DELIVERY] and not repair.completion_date:
-                    repair.completion_date = datetime.utcnow()
-                elif form.status.data == Repair.DELIVERED and not repair.delivery_date:
-                    repair.delivery_date = datetime.utcnow()
-            
-            db.session.commit()
-            flash(f'Reparación actualizada: {repair.client_name} - {repair.device_type}', 'success')
-            return redirect(url_for('repairs.index'))
-            
-        except Exception as e:
-            db.session.rollback()
-            print(f"❌ Error actualizando: {str(e)}")
-            flash('Error al actualizar la reparación. Inténtalo de nuevo.', 'error')
-    
-    return render_template('repairs/edit.html', title='Editar Reparación', form=form, repair=repair)
+        db.session.add(vehicle)
+        db.session.commit()
+        
+        flash(f'¡Vehículo [{vehicle.formatted_plate}] {vehicle.brand} {vehicle.model} ingresado al taller con éxito!', 'success')
+        return redirect(url_for('repairs.view', id=vehicle.id))
+        
+    return render_template('repairs/add.html', form=form)
 
-@bp.route('/view/<int:id>')
+
+@bp.route('/<int:id>')
 @login_required
 def view(id):
-    """Ver detalles de reparación."""
-    
-    repair = Repair.query.get_or_404(id)
-    return render_template('repairs/view.html', repair=repair)
+    """Ficha detallada del vehículo, días en taller y trabajos."""
+    vehicle = Repair.query.get_or_404(id)
+    return render_template('repairs/view.html', vehicle=vehicle)
 
-@bp.route('/delete/<int:id>', methods=['POST'])
+
+@bp.route('/<int:id>/diagnosis', methods=['GET', 'POST'])
+@login_required
+def diagnosis(id):
+    """Cargar o actualizar el diagnóstico mecánico y las tareas a realizar."""
+    vehicle = Repair.query.get_or_404(id)
+    form = DiagnosisWorkForm()
+    
+    if form.validate_on_submit():
+        vehicle.diagnosis = form.diagnosis.data.strip()
+        vehicle.work_to_do = form.work_to_do.data.strip()
+        vehicle.parts_needed = form.parts_needed.data.strip() if form.parts_needed.data else None
+        vehicle.estimated_cost = form.estimated_cost.data
+        vehicle.status = form.status.data
+        
+        if not vehicle.diagnosis_date:
+            vehicle.diagnosis_date = datetime.utcnow()
+            
+        db.session.commit()
+        flash(f'Diagnóstico y plan de trabajo actualizado para el vehículo [{vehicle.formatted_plate}].', 'success')
+        return redirect(url_for('repairs.view', id=vehicle.id))
+        
+    elif request.method == 'GET':
+        form.diagnosis.data = vehicle.diagnosis or ''
+        form.work_to_do.data = vehicle.work_to_do or ''
+        form.parts_needed.data = vehicle.parts_needed or ''
+        form.estimated_cost.data = vehicle.estimated_cost
+        form.status.data = vehicle.status if vehicle.status != Repair.STATUS_INGRESADO else Repair.STATUS_DIAGNOSTICADO
+        
+    return render_template('repairs/diagnosis.html', vehicle=vehicle, form=form)
+
+
+@bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+    """Edición integral de los datos del vehículo y cliente."""
+    vehicle = Repair.query.get_or_404(id)
+    form = RepairForm()
+    
+    if form.validate_on_submit():
+        vehicle.license_plate = Repair.clean_plate(form.license_plate.data)
+        vehicle.brand = form.brand.data.strip()
+        vehicle.model = form.model.data.strip()
+        vehicle.year = form.year.data
+        vehicle.color = form.color.data.strip() if form.color.data else None
+        vehicle.mileage = form.mileage.data
+        vehicle.client_name = form.client_name.data.strip()
+        vehicle.client_phone = form.client_phone.data.strip() if form.client_phone.data else None
+        vehicle.client_email = form.client_email.data.strip() if form.client_email.data else None
+        vehicle.problem_description = form.problem_description.data.strip()
+        vehicle.diagnosis = form.diagnosis.data.strip() if form.diagnosis.data else None
+        vehicle.work_to_do = form.work_to_do.data.strip() if form.work_to_do.data else None
+        vehicle.parts_needed = form.parts_needed.data.strip() if form.parts_needed.data else None
+        vehicle.status = form.status.data
+        vehicle.estimated_cost = form.estimated_cost.data
+        vehicle.final_cost = form.final_cost.data
+        
+        if vehicle.status == Repair.STATUS_ENTREGADO and not vehicle.delivery_date:
+            vehicle.delivery_date = datetime.utcnow()
+        elif vehicle.status == Repair.STATUS_LISTO and not vehicle.completion_date:
+            vehicle.completion_date = datetime.utcnow()
+            
+        db.session.commit()
+        flash(f'Datos del vehículo [{vehicle.formatted_plate}] actualizados.', 'success')
+        return redirect(url_for('repairs.view', id=vehicle.id))
+        
+    elif request.method == 'GET':
+        form.license_plate.data = vehicle.license_plate
+        form.brand.data = vehicle.brand
+        form.model.data = vehicle.model
+        form.year.data = vehicle.year
+        form.color.data = vehicle.color
+        form.mileage.data = vehicle.mileage
+        form.client_name.data = vehicle.client_name
+        form.client_phone.data = vehicle.client_phone
+        form.client_email.data = vehicle.client_email
+        form.problem_description.data = vehicle.problem_description
+        form.diagnosis.data = vehicle.diagnosis
+        form.work_to_do.data = vehicle.work_to_do
+        form.parts_needed.data = vehicle.parts_needed
+        form.status.data = vehicle.status
+        form.estimated_cost.data = vehicle.estimated_cost
+        form.final_cost.data = vehicle.final_cost
+        
+    return render_template('repairs/edit.html', form=form, vehicle=vehicle)
+
+
+@bp.route('/<int:id>/status/<new_status>', methods=['POST', 'GET'])
+@login_required
+def change_status(id, new_status):
+    """Cambio rápido de estado con un clic."""
+    vehicle = Repair.query.get_or_404(id)
+    valid_statuses = [choice[0] for choice in Repair.STATUS_CHOICES]
+    
+    if new_status in valid_statuses:
+        vehicle.status = new_status
+        if new_status == Repair.STATUS_ENTREGADO:
+            vehicle.delivery_date = datetime.utcnow()
+        elif new_status == Repair.STATUS_LISTO:
+            vehicle.completion_date = datetime.utcnow()
+            
+        db.session.commit()
+        flash(f'Estado del vehículo [{vehicle.formatted_plate}] cambiado a: {vehicle.get_status_display()}', 'info')
+    else:
+        flash('Estado no válido.', 'danger')
+        
+    # Redirigir según el referer o a la ficha
+    next_page = request.referrer or url_for('repairs.view', id=vehicle.id)
+    return redirect(next_page)
+
+
+@bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 def delete(id):
-    """Eliminar reparación (solo entregadas o sin reparación)."""
-    
-    repair = Repair.query.get_or_404(id)
-    
-    # Solo permitir eliminar reparaciones entregadas o sin reparación
-    if repair.status not in [Repair.DELIVERED, Repair.NO_REPAIR]:
-        flash('Solo se pueden eliminar reparaciones entregadas o sin reparación.', 'error')
-        return redirect(url_for('repairs.index'))
-    
-    try:
-        client_name = repair.client_name
-        device_type = repair.device_type
-        db.session.delete(repair)
-        db.session.commit()
-        flash(f'Reparación eliminada: {client_name} - {device_type}', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash('Error al eliminar la reparación. Inténtalo de nuevo.', 'error')
-    
+    """Eliminar registro de vehículo."""
+    vehicle = Repair.query.get_or_404(id)
+    plate = vehicle.formatted_plate
+    db.session.delete(vehicle)
+    db.session.commit()
+    flash(f'Vehículo [{plate}] eliminado del registro.', 'warning')
     return redirect(url_for('repairs.index'))
-
-@bp.route('/quick-status/<int:id>', methods=['POST'])
-@login_required
-def quick_status(id):
-    """Cambio rápido de estado via AJAX."""
-    
-    repair = Repair.query.get_or_404(id)
-    new_status = request.form.get('status')
-    
-    if new_status not in [choice[0] for choice in Repair.STATUS_CHOICES]:
-        return jsonify({'success': False, 'message': 'Estado inválido'})
-    
-    old_status = repair.status
-    repair.status = new_status
-    repair.updated_at = datetime.utcnow()
-    
-    # Actualizar fechas según el nuevo estado
-    if old_status != new_status:
-        if new_status == Repair.DIAGNOSED and not repair.diagnosis_date:
-            repair.diagnosis_date = datetime.utcnow()
-        elif new_status == Repair.READY_FOR_DELIVERY and not repair.completion_date:
-            repair.completion_date = datetime.utcnow()
-        elif new_status == Repair.DELIVERED and not repair.delivery_date:
-            repair.delivery_date = datetime.utcnow()
-    
-    try:
-        db.session.commit()
-        return jsonify({
-            'success': True, 
-            'message': f'Estado actualizado a: {repair.get_status_display()}',
-            'new_status': repair.get_status_display(),
-            'priority_class': repair.get_priority_class()
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': 'Error al actualizar el estado'})
-
-@bp.route('/stats')
-@login_required
-def stats():
-    """API para estadísticas del dashboard."""
-    
-    # Reparaciones activas por estado
-    stats = {}
-    for status_code, status_name in Repair.STATUS_CHOICES:
-        if status_code not in [Repair.DELIVERED, Repair.NO_REPAIR]:
-            count = Repair.query.filter_by(status=status_code).count()
-            stats[status_code] = {
-                'name': status_name,
-                'count': count
-            }
-    
-    # Prioridades
-    from datetime import timedelta
-    now = datetime.utcnow()
-    
-    urgent_date = now - timedelta(days=15)
-    medium_start = now - timedelta(days=14)
-    medium_end = now - timedelta(days=7)
-    
-    urgent_count = Repair.query.filter(
-        Repair.entry_date <= urgent_date,
-        ~Repair.status.in_([Repair.DELIVERED, Repair.NO_REPAIR])
-    ).count()
-    
-    medium_count = Repair.query.filter(
-        Repair.entry_date.between(medium_end, medium_start),
-        ~Repair.status.in_([Repair.DELIVERED, Repair.NO_REPAIR])
-    ).count()
-    
-    low_count = Repair.query.filter(
-        Repair.entry_date >= medium_end,
-        ~Repair.status.in_([Repair.DELIVERED, Repair.NO_REPAIR])
-    ).count()
-    
-    priorities = {
-        'urgent': urgent_count,
-        'medium': medium_count,
-        'low': low_count
-    }
-    
-    return jsonify({
-        'success': True,
-        'stats': stats,
-        'priorities': priorities
-    })

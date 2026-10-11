@@ -26,7 +26,7 @@ class Config:
     if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
     
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'sqlite:///reparaciones.db'
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL or f'sqlite:///{os.path.join(basedir, "taller.db")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_RECORD_QUERIES = True
     
@@ -42,8 +42,8 @@ class Config:
     REMEMBER_COOKIE_HTTPONLY = True
     
     # Configuración de la aplicación
-    APP_NAME = os.environ.get('APP_NAME') or 'Sistema de Reparaciones'
-    COMPANY_NAME = os.environ.get('COMPANY_NAME') or 'Tu Taller'
+    APP_NAME = os.environ.get('APP_NAME') or 'Taller Mecánico Don Orlando'
+    COMPANY_NAME = os.environ.get('COMPANY_NAME') or 'Taller Mecánico Don Orlando'
     
     # Paginación
     REPAIRS_PER_PAGE = int(os.environ.get('REPAIRS_PER_PAGE') or 20)

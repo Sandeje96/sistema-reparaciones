@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnóstico y Plan de Trabajo - {{ vehicle.formatted_plate }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9 col-xl-8">
+        <div class="card shadow-sm border-0">
+            <!-- Cabecera con info del vehículo -->
+            <div class="card-header bg-dark text-white p-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="license-plate-badge">{{ vehicle.formatted_plate }}</span>
+                        <div>
+                            <h5 class="mb-0 fw-bold">{{ vehicle.brand }} {{ vehicle.model }}</h5>
+                            <small class="text-secondary">Propietario: {{ vehicle.client_name }}</small>
+                        </div>
+                    </div>
+                    <span class="{{ vehicle.get_days_badge_class() }} text-dark">
+                        <i class="bi bi-hourglass-split"></i> {{ vehicle.get_days_badge_label() }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Recordatorio del motivo de entrada manifestado por el cliente -->
+                <div class="alert alert-secondary mb-4 p-3 border-start border-4 border-secondary">
+                    <div class="small fw-bold text-uppercase text-secondary mb-1">
+                        <i class="bi bi-info-circle me-1"></i> Falla manifestada por el cliente al ingresar:
+                    </div>
+                    <p class="mb-0 text-dark small">{{ vehicle.problem_description }}</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('repairs.diagnosis', id=vehicle.id) }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <!-- 1. Problema Detectado (Diagnóstico) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-primary fs-6">
+                            <i class="bi bi-search me-1"></i> 1. ¿Qué problema tiene el vehículo? (Diagnóstico Mecánico) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.diagnosis(class="form-control form-control-lg" + (" is-invalid" if form.diagnosis.errors else "")) }}
+                        <div class="form-text small">
+                            Describe técnicamente lo que encontraste durante la inspección mecánica (ej: falla en inyectores, desgaste en pastillas, fuga de refrigerante, rotura de bujes, etc.).
+                        </div>
+                        {% for error in form.diagnosis.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- 2. Trabajo a Realizar -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold fs-6" style="color: var(--taller-accent);">
+                            <i class="bi bi-wrench me-1"></i> 2. ¿Qué trabajo le vamos a realizar? (Tareas y Reparaciones) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.work_to_do(class="form-control form-control-lg" + (" is-invalid" if form.work_to_do.errors else "")) }}
+                        <div class="form-text small">
+                            Detalla las operaciones de mano de obra y servicio que se llevarán a cabo en el vehículo.
+                        </div>
+                        {% for error in form.work_to_do.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- 3. Repuestos Necesarios -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">
+                            <i class="bi bi-boxes me-1 text-secondary"></i> 3. Repuestos o Insumos Necesarios <small class="text-muted fw-normal">(Opcional)</small>
+                        </label>
+                        {{ form.parts_needed(class="form-control" + (" is-invalid" if form.parts_needed.errors else "")) }}
+                        <div class="form-text small">
+                            Lista repuestos, fluidos, filtros o piezas a encargar.
+                        </div>
+                        {% for error in form.parts_needed.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <!-- Presupuesto Estimado -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold text-dark">
+                                <i class="bi bi-currency-dollar text-success me-1"></i> Presupuesto Estimado ($)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">$</span>
+                                {{ form.estimated_cost(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <!-- Estado a Asignar -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold text-dark">
+                                <i class="bi bi-flag me-1 text-info"></i> Estado del Vehículo
+                            </label>
+                            {{ form.status(class="form-select") }}
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-outline-secondary px-4">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-taller-primary px-4 fw-bold">
+                            <i class="bi bi-check-circle me-1"></i> Guardar Diagnóstico y Plan de Trabajo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

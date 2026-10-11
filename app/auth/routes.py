@@ -5,7 +5,7 @@ Rutas de autenticación y gestión de usuarios.
 
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.urls import url_parse
+from urllib.parse import urlsplit
 from app.auth import bp
 from app.auth.forms import LoginForm, RegisterForm
 from app.models import User
@@ -30,7 +30,7 @@ def login():
             
             # Redirigir a la página solicitada o al dashboard
             next_page = request.args.get('next')
-            if not next_page or url_parse(next_page).netloc != '':
+            if not next_page or urlsplit(next_page).netloc != '':
                 next_page = url_for('repairs.index')
             
             flash(f'¡Bienvenido, {user.username}!', 'success')

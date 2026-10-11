@@ -1,346 +1,349 @@
 {% extends "base.html" %}
 
-{% block styles %}
-<link href="{{ url_for('static', filename='css/repairs.css') }}" rel="stylesheet">
-{% endblock %}
+{% block title %}Vehículos en Taller{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-1">
-                    <i class="bi bi-list-task text-primary me-2"></i>
-                    Lista de Reparaciones
-                </h1>
-                <p class="text-muted mb-0">
-                    Gestiona todas las reparaciones ordenadas por antigüedad
-                </p>
+<div class="row mb-3 g-3">
+    <!-- Métricas del Taller -->
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="card stat-card bg-white border-start border-4 border-primary h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">EN TALLER</div>
+                        <div class="fs-3 fw-bold text-dark">{{ stats.total_in_shop }}</div>
+                    </div>
+                    <i class="bi bi-car-front fs-2 text-primary opacity-75"></i>
+                </div>
             </div>
-            <div>
-                <a href="{{ url_for('repairs.add') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>
-                    Agregar Reparación
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="card stat-card bg-white border-start border-4 border-warning h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">SIN DIAGNÓSTICO</div>
+                        <div class="fs-3 fw-bold text-warning">{{ stats.pending_diagnosis }}</div>
+                    </div>
+                    <i class="bi bi-search fs-2 text-warning opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-3">
+        <div class="card stat-card bg-white border-start border-4 border-info h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">EN REPARACIÓN</div>
+                        <div class="fs-3 fw-bold text-info">{{ stats.in_repair }}</div>
+                    </div>
+                    <i class="bi bi-wrench-adjustable fs-2 text-info opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="card stat-card bg-white border-start border-4 border-success h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">LISTOS</div>
+                        <div class="fs-3 fw-bold text-success">{{ stats.ready }}</div>
+                    </div>
+                    <i class="bi bi-check-circle fs-2 text-success opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 col-xl-3">
+        <div class="card stat-card bg-white border-start border-4 border-danger h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">DEMORADOS (+7 DÍAS)</div>
+                        <div class="fs-3 fw-bold text-danger">{{ stats.overdue }}</div>
+                    </div>
+                    <i class="bi bi-hourglass-bottom fs-2 text-danger opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de Búsqueda y Filtros Rápidos -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ url_for('repairs.index') }}" class="row g-2 align-items-center">
+            <!-- Pestañas de permanencia rápidas -->
+            <div class="col-12 col-lg-auto d-flex flex-wrap gap-1 mb-2 mb-lg-0">
+                <a href="{{ url_for('repairs.index', filter_active='in_shop', search=search) }}" 
+                   class="btn btn-sm {{ 'btn-dark' if filter_active == 'in_shop' else 'btn-outline-secondary' }}">
+                    <i class="bi bi-tools me-1"></i> Activos en Taller
+                </a>
+                <a href="{{ url_for('repairs.index', filter_active='overdue', search=search) }}" 
+                   class="btn btn-sm {{ 'btn-danger' if filter_active == 'overdue' else 'btn-outline-danger' }}">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Demorados (+7 d)
+                </a>
+                <a href="{{ url_for('repairs.index', filter_active='delivered', search=search) }}" 
+                   class="btn btn-sm {{ 'btn-secondary' if filter_active == 'delivered' else 'btn-outline-secondary' }}">
+                    <i class="bi bi-archive me-1"></i> Entregados
+                </a>
+                <a href="{{ url_for('repairs.index', filter_active='all', search=search) }}" 
+                   class="btn btn-sm {{ 'btn-outline-dark' if filter_active == 'all' else 'btn-light border' }}">
+                    Todos
                 </a>
             </div>
-        </div>
 
-        <!-- Filtros y búsqueda -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="GET" class="row g-3">
-                    <!-- Búsqueda -->
-                    <div class="col-md-4">
-                        {{ search_form.search(class="form-control", placeholder="Buscar cliente, equipo, marca...") }}
-                    </div>
-                    <!-- Filtro por estado -->
-                    <div class="col-md-3">
-                        {{ search_form.status_filter(class="form-select") }}
-                    </div>
-                    <!-- Filtro por prioridad -->
-                    <div class="col-md-3">
-                        {{ search_form.priority_filter(class="form-select") }}
-                    </div>
-                    <!-- Botón buscar -->
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-outline-primary w-100">
-                            <i class="bi bi-search me-1"></i>Buscar
-                        </button>
-                    </div>
-                </form>
-                
-                <!-- Limpiar filtros -->
-                {% if search or status_filter or priority_filter %}
-                <div class="mt-3">
-                    <a href="{{ url_for('repairs.index') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
-                    </a>
+            <!-- Caja de búsqueda por patente, cliente, modelo -->
+            <div class="col-12 col-md-6 col-lg">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" value="{{ search }}" class="form-control border-start-0" 
+                           placeholder="Buscar por Patente (ej: AA123BB o ABC123), Cliente, Auto...">
+                    {% if search %}
+                        <a href="{{ url_for('repairs.index', filter_active=filter_active) }}" class="btn btn-outline-secondary" title="Limpiar búsqueda">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
-        </div>
 
-        <!-- Estadísticas rápidas -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card bg-warning bg-opacity-10 border-warning">
-                    <div class="card-body text-center">
-                        <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
-                        <h5 class="card-title mt-2">Falta Diagnóstico</h5>
-                        <p class="card-text fs-4 fw-bold" id="pending-diagnosis-count">-</p>
-                    </div>
-                </div>
+            <!-- Filtro de ordenamiento -->
+            <div class="col-6 col-md-3 col-lg-auto">
+                <select name="sort_by" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="entry_asc" {{ 'selected' if sort_by == 'entry_asc' }}>⏳ Mayor tiempo en taller</option>
+                    <option value="entry_desc" {{ 'selected' if sort_by == 'entry_desc' }}>✨ Más recientes primero</option>
+                    <option value="plate" {{ 'selected' if sort_by == 'plate' }}>🔤 Orden por Patente</option>
+                </select>
             </div>
-            <div class="col-md-3">
-                <div class="card bg-info bg-opacity-10 border-info">
-                    <div class="card-body text-center">
-                        <i class="bi bi-clock-history text-info fs-1"></i>
-                        <h5 class="card-title mt-2">Esperando Repuestos</h5>
-                        <p class="card-text fs-4 fw-bold" id="waiting-parts-count">-</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-success bg-opacity-10 border-success">
-                    <div class="card-body text-center">
-                        <i class="bi bi-check-circle text-success fs-1"></i>
-                        <h5 class="card-title mt-2">Listos para Entrega</h5>
-                        <p class="card-text fs-4 fw-bold" id="ready-delivery-count">-</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-danger bg-opacity-10 border-danger">
-                    <div class="card-body text-center">
-                        <i class="bi bi-alarm text-danger fs-1"></i>
-                        <h5 class="card-title mt-2">Urgentes</h5>
-                        <p class="card-text fs-4 fw-bold" id="urgent-count">-</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Lista de reparaciones -->
-        {% if repairs.items %}
-        <div class="card">
-            <div class="card-body p-0">
-                <!-- Versión móvil -->
-                <div class="d-md-none">
-                    {% for repair in repairs.items %}
-                    <div class="repair-card-mobile border-bottom p-3 {{ repair.get_priority_class() }}">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+            <input type="hidden" name="filter_active" value="{{ filter_active }}">
+
+            <div class="col-6 col-md-3 col-lg-auto d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-taller-primary w-100">
+                    Filtrar
+                </button>
+                <a href="{{ url_for('repairs.add') }}" class="btn btn-sm btn-success text-nowrap">
+                    <i class="bi bi-plus-lg"></i> Nuevo
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Listado de Vehículos -->
+{% if repairs.items %}
+    <div class="row g-3">
+        {% for vehicle in repairs.items %}
+            <div class="col-12">
+                <div class="vehicle-card position-relative">
+                    <!-- Cabecera de la tarjeta del vehículo -->
+                    <div class="vehicle-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <!-- Chapa Patente -->
+                            <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="text-decoration-none">
+                                <span class="license-plate-badge">{{ vehicle.formatted_plate }}</span>
+                            </a>
+
+                            <!-- Marca, Modelo y Año -->
                             <div>
-                                <h6 class="mb-1 fw-bold">{{ repair.client_name }}</h6>
-                                <small class="text-muted">{{ repair.device_type }} - {{ repair.brand }} {{ repair.model }}</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge priority-badge-{{ repair.get_priority_class().split('-')[-1] }}">
-                                    {{ repair.get_priority_label() }}
-                                </span>
-                                <br>
-                                <small class="text-muted">{{ repair.days_since_entry() }} días</small>
+                                <h5 class="mb-0 fw-bold text-dark">
+                                    <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="text-dark text-decoration-none">
+                                        {{ vehicle.brand }} {{ vehicle.model }}
+                                    </a>
+                                    {% if vehicle.year %}
+                                        <span class="badge bg-light text-secondary border fw-normal">{{ vehicle.year }}</span>
+                                    {% endif %}
+                                    {% if vehicle.color %}
+                                        <span class="badge bg-light text-muted border fw-normal">{{ vehicle.color }}</span>
+                                    {% endif %}
+                                </h5>
+                                <div class="small text-muted">
+                                    <i class="bi bi-person me-1"></i><strong>{{ vehicle.client_name }}</strong>
+                                    {% if vehicle.client_phone %}
+                                        <span class="mx-1">•</span>
+                                        <i class="bi bi-telephone me-1"></i>
+                                        <a href="tel:{{ vehicle.client_phone }}" class="text-decoration-none text-muted">{{ vehicle.client_phone }}</a>
+                                        <a href="https://wa.me/{{ vehicle.client_phone|replace(' ', '')|replace('-', '')|replace('+', '') }}" 
+                                           target="_blank" class="text-success ms-1" title="Enviar WhatsApp">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-                        
-                        <p class="mb-2 small">{{ repair.problem_description[:100] }}{% if repair.problem_description|length > 100 %}...{% endif %}</p>
-                        
-                        <div class="d-flex justify-content-between align-items-center">
-                            <select class="form-select form-select-sm status-select" data-repair-id="{{ repair.id }}" style="max-width: 200px;">
-                                {% for status_code, status_name in repair.STATUS_CHOICES %}
-                                <option value="{{ status_code }}" {% if repair.status == status_code %}selected{% endif %}>
-                                    {{ status_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-outline-success btn-sm">
-                                    <i class="bi bi-file-text"></i>
-                                </a>
-                                {% if repair.status in ['delivered', 'no_repair'] %}
-                                <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+
+                        <!-- Contador de días y Estado -->
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <!-- Conteo de días en taller -->
+                            <span class="{{ vehicle.get_days_badge_class() }}" title="Fecha de ingreso: {{ vehicle.entry_date.strftime('%d/%m/%Y %H:%M') }}">
+                                <i class="bi bi-hourglass-split"></i>
+                                <span>{{ vehicle.get_days_badge_label() }}</span>
+                            </span>
+
+                            <!-- Estado del vehículo -->
+                            <span class="{{ vehicle.get_status_badge_class() }}">
+                                {{ vehicle.get_status_display() }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo de la tarjeta: Falla, Diagnóstico y Trabajo -->
+                    <div class="card-body p-3">
+                        <div class="row g-3">
+                            <!-- Motivo de Ingreso -->
+                            <div class="col-12 col-lg-4">
+                                <div class="p-2 rounded bg-light border-start border-3 border-secondary h-100">
+                                    <div class="small text-muted fw-bold text-uppercase mb-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i> Falla Manifestada
+                                    </div>
+                                    <p class="mb-0 small text-dark">{{ vehicle.problem_description }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Diagnóstico Mecánico (Problema detectado) -->
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <div class="box-diagnosis h-100">
+                                    <div class="small text-primary fw-bold text-uppercase mb-1 d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-search me-1"></i> Problema Detectado (Diagnóstico)</span>
+                                        {% if not vehicle.diagnosis %}
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">PENDIENTE</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if vehicle.diagnosis %}
+                                        <p class="mb-0 small text-dark">{{ vehicle.diagnosis }}</p>
+                                    {% else %}
+                                        <p class="mb-2 small text-muted fst-italic">Aún no se ha registrado el diagnóstico mecánico.</p>
+                                        <a href="{{ url_for('repairs.diagnosis', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary py-0 px-2 small">
+                                            <i class="bi bi-plus-circle me-1"></i> Escribir Diagnóstico
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Trabajo a Realizar -->
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <div class="box-work h-100">
+                                    <div class="small fw-bold text-uppercase mb-1" style="color: var(--taller-accent);">
+                                        <i class="bi bi-wrench me-1"></i> Trabajo a Realizar
+                                    </div>
+                                    {% if vehicle.work_to_do %}
+                                        <p class="mb-0 small text-dark">{{ vehicle.work_to_do }}</p>
+                                        {% if vehicle.estimated_cost %}
+                                            <div class="mt-2 small text-muted">
+                                                Presupuesto: <strong class="text-dark">${{ "%.2f"|format(vehicle.estimated_cost) }}</strong>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="mb-2 small text-muted fst-italic">Sin tareas cargadas.</p>
+                                        <a href="{{ url_for('repairs.diagnosis', id=vehicle.id) }}" class="btn btn-sm btn-outline-warning py-0 px-2 small">
+                                            <i class="bi bi-pencil-square me-1"></i> Definir Trabajo
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Barra inferior de acciones rápidas -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2 border-top">
+                            <div class="small text-muted">
+                                <i class="bi bi-calendar3 me-1"></i> Ingreso: <strong>{{ vehicle.entry_date.strftime('%d/%m/%Y %H:%M') }}</strong>
+                                {% if vehicle.mileage %}
+                                    <span class="mx-2">•</span>
+                                    <i class="bi bi-speedometer me-1"></i> {{ vehicle.mileage }} km
                                 {% endif %}
                             </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
 
-                <!-- Versión escritorio -->
-                <div class="d-none d-md-block">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 8%">Prioridad</th>
-                                    <th style="width: 15%">Cliente</th>
-                                    <th style="width: 20%">Equipo</th>
-                                    <th style="width: 25%">Problema</th>
-                                    <th style="width: 15%">Estado</th>
-                                    <th style="width: 10%">Días</th>
-                                    <th style="width: 7%">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for repair in repairs.items %}
-                                <tr class="repair-row {{ repair.get_priority_class() }}">
-                                    <td>
-                                        <span class="badge priority-badge-{{ repair.get_priority_class().split('-')[-1] }}">
-                                            {{ repair.get_priority_label() }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="fw-semibold">{{ repair.client_name }}</div>
-                                        {% if repair.client_phone %}
-                                        <small class="text-muted">{{ repair.client_phone }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="fw-semibold">{{ repair.device_type }}</div>
-                                        <small class="text-muted">{{ repair.brand }} {{ repair.model }}</small>
-                                    </td>
-                                    <td>
-                                        <div class="problem-text">
-                                            {{ repair.problem_description[:80] }}{% if repair.problem_description|length > 80 %}...{% endif %}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <select class="form-select form-select-sm status-select" data-repair-id="{{ repair.id }}">
-                                            {% for status_code, status_name in repair.STATUS_CHOICES %}
-                                            <option value="{{ status_code }}" {% if repair.status == status_code %}selected{% endif %}>
-                                                {{ status_name }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <span class="fw-bold">{{ repair.days_since_entry() }}</span>
-                                        <small class="text-muted d-block">días</small>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('repairs.view', id=repair.id) }}" class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ url_for('repairs.edit', id=repair.id) }}" class="btn btn-outline-secondary btn-sm">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a href="{{ url_for('informes.create_from_repair', repair_id=repair.id) }}" class="btn btn-outline-success btn-sm">
-                                                <i class="bi bi-file-text"></i>
-                                            </a>
-                                            {% if repair.status in ['delivered', 'no_repair'] %}
-                                            <button class="btn btn-outline-danger btn-sm delete-btn" data-repair-id="{{ repair.id }}" data-client="{{ repair.client_name }}" data-device="{{ repair.device_type }}">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                <!-- Botón Diagnóstico y Trabajo -->
+                                <a href="{{ url_for('repairs.diagnosis', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary" title="Cargar diagnóstico y plan de trabajo">
+                                    <i class="bi bi-clipboard2-pulse me-1"></i> Diagnóstico / Tareas
+                                </a>
+
+                                <!-- Ficha completa -->
+                                <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-sm btn-taller-dark" title="Ver ficha completa">
+                                    <i class="bi bi-eye me-1"></i> Ver Ficha
+                                </a>
+
+                                <!-- Dropdown Cambio Rápido de Estado -->
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Estado
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                        <li class="dropdown-header">Cambiar estado del auto</li>
+                                        <li><a class="dropdown-item" href="{{ url_for('repairs.change_status', id=vehicle.id, new_status='ingresado') }}">🟡 Ingresado</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('repairs.change_status', id=vehicle.id, new_status='diagnosticado') }}">🔍 Diagnóstico realizado</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('repairs.change_status', id=vehicle.id, new_status='en_reparacion') }}">🔧 En reparación</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('repairs.change_status', id=vehicle.id, new_status='esperando_repuestos') }}">📦 Esperando repuestos</a></li>
+                                        <li><a class="dropdown-item" href="{{ url_for('repairs.change_status', id=vehicle.id, new_status='listo') }}">✅ Listo para entregar</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-success fw-bold" href="{{ url_for('repairs.change_status', id=vehicle.id, new_status='entregado') }}">🚗 Marcar como Entregado</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% endfor %}
+    </div>
 
-        <!-- Paginación -->
-        {% if repairs.pages > 1 %}
-        <nav aria-label="Paginación de reparaciones" class="mt-4">
+    <!-- Paginación -->
+    {% if repairs.pages > 1 %}
+        <nav class="mt-4" aria-label="Navegación de páginas">
             <ul class="pagination justify-content-center">
-                <!-- Anterior -->
                 {% if repairs.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('repairs.index', page=repairs.prev_num, search=search, status_filter=status_filter, priority_filter=priority_filter) }}">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                </li>
-                {% endif %}
-
-                <!-- Páginas -->
-                {% for page_num in repairs.iter_pages() %}
-                    {% if page_num %}
-                        {% if page_num != repairs.page %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('repairs.index', page=page_num, search=search, status_filter=status_filter, priority_filter=priority_filter) }}">
-                                {{ page_num }}
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
-                        {% endif %}
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">…</span>
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('repairs.index', page=repairs.prev_num, search=search, filter_active=filter_active, sort_by=sort_by) }}">Anterior</a>
                     </li>
+                {% endif %}
+                
+                {% for page_num in repairs.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
+                    {% if page_num %}
+                        <li class="page-item {{ 'active' if page_num == repairs.page else '' }}">
+                            <a class="page-link" href="{{ url_for('repairs.index', page=page_num, search=search, filter_active=filter_active, sort_by=sort_by) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
                     {% endif %}
                 {% endfor %}
 
-                <!-- Siguiente -->
                 {% if repairs.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('repairs.index', page=repairs.next_num, search=search, status_filter=status_filter, priority_filter=priority_filter) }}">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('repairs.index', page=repairs.next_num, search=search, filter_active=filter_active, sort_by=sort_by) }}">Siguiente</a>
+                    </li>
                 {% endif %}
             </ul>
         </nav>
-        {% endif %}
+    {% endif %}
 
-        {% else %}
-        <!-- Sin reparaciones -->
-        <div class="text-center py-5">
-            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-            <h4 class="mt-3 text-muted">No hay reparaciones</h4>
-            <p class="text-muted">
-                {% if search or status_filter or priority_filter %}
-                No se encontraron reparaciones con los filtros aplicados.
+{% else %}
+    <!-- Estado Vacío -->
+    <div class="card shadow-sm border-0 text-center py-5">
+        <div class="card-body">
+            <div class="display-3 text-muted mb-3">🚗</div>
+            <h4 class="fw-bold text-dark">No se encontraron vehículos</h4>
+            <p class="text-muted mb-4">
+                {% if search %}
+                    No hay vehículos que coincidan con la búsqueda "<strong>{{ search }}</strong>".
                 {% else %}
-                Comienza agregando tu primera reparación.
+                    No hay vehículos registrados en este filtro.
                 {% endif %}
             </p>
-            {% if not search and not status_filter and not priority_filter %}
-            <a href="{{ url_for('repairs.add') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>Agregar Reparación
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Modal de confirmación para eliminar -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-                    Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar esta reparación?</p>
-                <div class="alert alert-warning">
-                    <strong>Cliente:</strong> <span id="delete-client"></span><br>
-                    <strong>Equipo:</strong> <span id="delete-device"></span>
-                </div>
-                <p class="text-muted small">Esta acción no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="delete-form" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i>Eliminar
-                    </button>
-                </form>
+            <div class="d-flex justify-content-center gap-2">
+                {% if search or filter_active != 'in_shop' %}
+                    <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary">
+                        Ver todos en taller
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('repairs.add') }}" class="btn btn-taller-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Ingresar un Vehículo
+                </a>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/repairs.js') }}"></script>
+{% endif %}
 {% endblock %}

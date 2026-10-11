@@ -1,30 +1,36 @@
 {% extends "base.html" %}
 
+{% block title %}Iniciar Sesión - Taller Mecánico Don Orlando{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-5">
-                <!-- Header -->
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-7 col-lg-5 col-xl-4">
+        <div class="card shadow border-0 overflow-hidden">
+            <!-- Cabecera con Logo de Don Orlando -->
+            <div class="bg-dark text-white p-4 text-center border-bottom border-warning border-3">
+                <img src="{{ url_for('static', filename='images/logo_don_orlando.jpg') }}" alt="Logo Don Orlando" 
+                     class="img-fluid rounded shadow mb-3" style="max-height: 120px; object-fit: contain;">
+                <h4 class="fw-bold mb-0 text-white">DON ORLANDO</h4>
+                <div class="text-warning text-uppercase fw-semibold small" style="letter-spacing: 1.5px;">Taller Mecánico</div>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
                 <div class="text-center mb-4">
-                    <div class="mb-3">
-                        <i class="bi bi-tools text-primary" style="font-size: 3rem;"></i>
-                    </div>
-                    <h1 class="h3 mb-1 fw-bold">Iniciar Sesión</h1>
-                    <p class="text-muted">Accede al sistema de reparaciones</p>
+                    <h5 class="fw-bold text-dark">Acceso al Sistema</h5>
+                    <p class="text-muted small">Ingresa tus credenciales para gestionar vehículos y reparaciones</p>
                 </div>
 
                 <!-- Formulario -->
-                <form method="POST" novalidate>
+                <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
                     {{ form.hidden_tag() }}
                     
                     <!-- Usuario -->
                     <div class="mb-3">
-                        <label for="{{ form.username.id }}" class="form-label fw-semibold">
-                            <i class="bi bi-person me-1"></i>Usuario
+                        <label for="{{ form.username.id }}" class="form-label fw-bold text-dark small">
+                            <i class="bi bi-person-fill text-secondary me-1"></i> Usuario
                         </label>
                         {{ form.username(class="form-control form-control-lg" + (" is-invalid" if form.username.errors else ""), 
-                                        placeholder="Ingresa tu usuario") }}
+                                        placeholder="Tu nombre de usuario") }}
                         {% if form.username.errors %}
                             <div class="invalid-feedback">
                                 {% for error in form.username.errors %}
@@ -36,11 +42,11 @@
 
                     <!-- Contraseña -->
                     <div class="mb-3">
-                        <label for="{{ form.password.id }}" class="form-label fw-semibold">
-                            <i class="bi bi-lock me-1"></i>Contraseña
+                        <label for="{{ form.password.id }}" class="form-label fw-bold text-dark small">
+                            <i class="bi bi-lock-fill text-secondary me-1"></i> Contraseña
                         </label>
                         {{ form.password(class="form-control form-control-lg" + (" is-invalid" if form.password.errors else ""), 
-                                        placeholder="Ingresa tu contraseña") }}
+                                        placeholder="••••••••") }}
                         {% if form.password.errors %}
                             <div class="invalid-feedback">
                                 {% for error in form.password.errors %}
@@ -51,37 +57,27 @@
                     </div>
 
                     <!-- Recordarme -->
-                    <div class="mb-4">
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
                         <div class="form-check">
                             {{ form.remember_me(class="form-check-input") }}
-                            {{ form.remember_me.label(class="form-check-label") }}
+                            {{ form.remember_me.label(class="form-check-label text-muted small") }}
                         </div>
                     </div>
 
-                    <!-- Botón -->
+                    <!-- Botón de Inicio de Sesión -->
                     <div class="d-grid">
-                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        <button type="submit" class="btn btn-taller-primary btn-lg fw-bold shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
+                        </button>
                     </div>
                 </form>
 
-                <!-- Registro -->
-                <div class="text-center mt-4">
+                <div class="text-center mt-4 pt-3 border-top">
                     <small class="text-muted">
-                        ¿No tienes cuenta? 
-                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
-                            Regístrate aquí
-                        </a>
+                        Usuario inicial por defecto: <code class="text-dark fw-bold">admin</code> / <code class="text-dark fw-bold">admin123</code>
                     </small>
                 </div>
             </div>
-        </div>
-
-        <!-- Info adicional -->
-        <div class="text-center mt-4">
-            <small class="text-muted">
-                <i class="bi bi-shield-check me-1"></i>
-                Acceso seguro al sistema de gestión de reparaciones
-            </small>
         </div>
     </div>
 </div>

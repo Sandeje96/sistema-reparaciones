@@ -1,22 +1,23 @@
 # app/models.py
 """
-Modelos de base de datos para el Sistema de Gestión de Reparaciones.
+Modelos de base de datos para el Taller Mecánico Don Orlando.
 """
 
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
+import re
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 import uuid
 import os
 
+
 class User(UserMixin, db.Model):
     """Modelo de usuario del sistema."""
     
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(120), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -32,62 +33,64 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+
 class Repair(db.Model):
-    """Modelo para reparaciones de equipos."""
+    """
+    Modelo de Reparación y Gestión de Vehículos en Taller Mecánico Don Orlando.
+    """
+    __tablename__ = 'repairs'
     
     id = db.Column(db.Integer, primary_key=True)
     
-    # Información del cliente
+    # 🚗 Identificación del Vehículo
+    license_plate = db.Column(db.String(10), nullable=False, index=True)  # Patente: XXX111 o XX111XX
+    brand = db.Column(db.String(50), nullable=False)                      # Marca: Ford, Chevrolet, Toyota, etc.
+    model = db.Column(db.String(50), nullable=False)                      # Modelo: Focus, Hilux, Gol, etc.
+    year = db.Column(db.Integer, nullable=True)                           # Año
+    color = db.Column(db.String(30), nullable=True)                       # Color
+    mileage = db.Column(db.Integer, nullable=True)                        # Kilometraje actual
+    
+    # 👤 Datos del Cliente
     client_name = db.Column(db.String(100), nullable=False, index=True)
-    client_phone = db.Column(db.String(20), nullable=True)
+    client_phone = db.Column(db.String(30), nullable=True)
+    client_email = db.Column(db.String(100), nullable=True)
     
-    # Información del equipo
-    device_type = db.Column(db.String(50), nullable=False)  # TV, Radio, etc.
-    brand = db.Column(db.String(50), nullable=False)
-    model = db.Column(db.String(50), nullable=False)
-    serial_number = db.Column(db.String(100), nullable=True)
+    # 🔧 Motivo de Ingreso, Diagnóstico y Tareas
+    problem_description = db.Column(db.Text, nullable=False)  # Motivo de ingreso / Falla manifestada
+    diagnosis = db.Column(db.Text, nullable=True)             # Problema detectado por el mecánico
+    work_to_do = db.Column(db.Text, nullable=True)            # Trabajo a realizar / Reparaciones presupuestadas
+    parts_needed = db.Column(db.Text, nullable=True)          # Repuestos e insumos necesarios
     
-    # Descripción del problema
-    problem_description = db.Column(db.Text, nullable=False)
+    # 💰 Costos
+    estimated_cost = db.Column(db.Float, nullable=True)       # Presupuesto estimado
+    final_cost = db.Column(db.Float, nullable=True)           # Costo final cobrado
     
-    # Estados de la reparación
-    PENDING_DIAGNOSIS = 'pending_diagnosis'
-    DIAGNOSED = 'diagnosed'
-    WAITING_PARTS = 'waiting_parts'
-    READY_FOR_DELIVERY = 'ready_for_delivery'
-    DELIVERED = 'delivered'
-    NO_REPAIR = 'no_repair'
+    # 🚦 Estados de permanencia en taller
+    STATUS_INGRESADO = 'ingresado'
+    STATUS_DIAGNOSTICADO = 'diagnosticado'
+    STATUS_EN_REPARACION = 'en_reparacion'
+    STATUS_ESPERANDO_REPUESTOS = 'esperando_repuestos'
+    STATUS_LISTO = 'listo'
+    STATUS_ENTREGADO = 'entregado'
     
     STATUS_CHOICES = [
-        (PENDING_DIAGNOSIS, 'Falta diagnóstico'),
-        (DIAGNOSED, 'Diagnóstico hecho'),
-        (WAITING_PARTS, 'Esperando repuestos'),
-        (READY_FOR_DELIVERY, 'Pendiente de entrega'),
-        (DELIVERED, 'Entregado'),
-        (NO_REPAIR, 'Sin reparación')
+        (STATUS_INGRESADO, 'Ingresado (Pendiente revisión)'),
+        (STATUS_DIAGNOSTICADO, 'Diagnóstico realizado'),
+        (STATUS_EN_REPARACION, 'En reparación'),
+        (STATUS_ESPERANDO_REPUESTOS, 'Esperando repuestos'),
+        (STATUS_LISTO, 'Listo para entregar'),
+        (STATUS_ENTREGADO, 'Entregado')
     ]
     
-    status = db.Column(db.String(20), nullable=False, default=PENDING_DIAGNOSIS, index=True)
+    status = db.Column(db.String(30), nullable=False, default=STATUS_INGRESADO, index=True)
     
-    # Información adicional
-    diagnosis_notes = db.Column(db.Text, nullable=True)
-    repair_cost = db.Column(db.Float, nullable=True)
-    parts_needed = db.Column(db.Text, nullable=True)
-
-    # AGREGAR ESTOS NUEVOS CAMPOS:
-    # Información adicional para informes técnicos
-    insurance_company = db.Column(db.String(100), nullable=True)
-    insured_company = db.Column(db.String(100), nullable=True)
-    claim_number = db.Column(db.String(50), nullable=True)
-    incident_date = db.Column(db.Date, nullable=True)
-    
-    # Fechas
+    # ⏱️ Fechas para seguimiento del tiempo
     entry_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
     diagnosis_date = db.Column(db.DateTime, nullable=True)
     completion_date = db.Column(db.DateTime, nullable=True)
     delivery_date = db.Column(db.DateTime, nullable=True)
     
-    # Usuario que creó el registro
+    # Auditoría
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -95,118 +98,124 @@ class Repair(db.Model):
     # Relación con usuario
     creator = db.relationship('User', backref=db.backref('repairs', lazy=True))
     
+    @staticmethod
+    def clean_plate(plate):
+        """Limpia y normaliza la patente (mayúsculas, sin espacios ni guiones)."""
+        if not plate:
+            return ''
+        return re.sub(r'[^A-Za-z0-9]', '', plate).upper()
+    
+    @property
+    def formatted_plate(self):
+        """Devuelve la patente con formato legible (ej: AA 123 BB o ABC 123)."""
+        plate = self.clean_plate(self.license_plate)
+        if len(plate) == 6:  # Formato tradicional: XXX111 -> XXX 111
+            return f"{plate[:3]} {plate[3:]}"
+        elif len(plate) == 7:  # Formato Mercosur: XX111XX -> XX 111 XX
+            return f"{plate[:2]} {plate[2:5]} {plate[5:]}"
+        return plate
+    
+    def days_in_shop(self):
+        """Calcula los días transcurridos desde el ingreso del vehículo."""
+        if not self.entry_date:
+            return 0
+        ref_date = self.delivery_date if (self.status == self.STATUS_ENTREGADO and self.delivery_date) else datetime.utcnow()
+        delta = ref_date - self.entry_date
+        return max(0, delta.days)
+    
+    def days_since_entry(self):
+        """Compatibilidad con métodos anteriores."""
+        return self.days_in_shop()
+    
+    def get_days_badge_class(self):
+        """Retorna la clase CSS para el badge de días transcurridos."""
+        if self.status == self.STATUS_ENTREGADO:
+            return 'badge-days-delivered'
+        days = self.days_in_shop()
+        if days >= 7:
+            return 'badge-days-danger'    # Demorado (+7 días)
+        elif days >= 3:
+            return 'badge-days-warning'   # En atención (3-6 días)
+        else:
+            return 'badge-days-success'   # Reciente (0-2 días)
+            
+    def get_days_badge_label(self):
+        """Texto para el badge de días."""
+        if self.status == self.STATUS_ENTREGADO:
+            return f'Estuvo {self.days_in_shop()} d'
+        days = self.days_in_shop()
+        if days == 0:
+            return 'Ingresó hoy'
+        elif days == 1:
+            return '1 día'
+        else:
+            return f'{days} días'
+    
+    def get_status_badge_class(self):
+        """Clase CSS para el badge de estado."""
+        classes = {
+            self.STATUS_INGRESADO: 'badge-status-ingresado',
+            self.STATUS_DIAGNOSTICADO: 'badge-status-diagnosticado',
+            self.STATUS_EN_REPARACION: 'badge-status-en-reparacion',
+            self.STATUS_ESPERANDO_REPUESTOS: 'badge-status-esperando-repuestos',
+            self.STATUS_LISTO: 'badge-status-listo',
+            self.STATUS_ENTREGADO: 'badge-status-entregado',
+        }
+        return classes.get(self.status, 'badge-status-default')
+    
     def get_status_display(self):
         """Obtener el nombre amigable del estado."""
         status_dict = dict(self.STATUS_CHOICES)
         return status_dict.get(self.status, 'Desconocido')
     
-    def days_since_entry(self):
-        """Calcular días desde el ingreso."""
-        delta = datetime.utcnow() - self.entry_date
-        return delta.days
-    
-    def get_priority_class(self):
-        """Obtener clase CSS basada en la antigüedad."""
-        days = self.days_since_entry()
-        if days >= 15:
-            return 'priority-high'
-        elif days >= 7:
-            return 'priority-medium'
-        else:
-            return 'priority-low'
-    
-    def get_priority_label(self):
-        """Obtener etiqueta de prioridad."""
-        days = self.days_since_entry()
-        if days >= 15:
-            return 'Urgente'
-        elif days >= 7:
-            return 'Media'
-        else:
-            return 'Baja'
-    
     def is_active(self):
-        """Verificar si la reparación está activa (no entregada ni sin reparación)."""
-        return self.status not in [self.DELIVERED, self.NO_REPAIR]
-    
+        """Verificar si el vehículo sigue en el taller."""
+        return self.status != self.STATUS_ENTREGADO
+        
+    @property
+    def vehicle_title(self):
+        """Título amigable: Marca Modelo (Año)."""
+        year_str = f" ({self.year})" if self.year else ""
+        return f"{self.brand} {self.model}{year_str}"
+        
     def __repr__(self):
-        return f'<Repair {self.id}: {self.client_name} - {self.device_type}>'
+        return f'<Vehículo {self.license_plate}: {self.brand} {self.model}>'
 
-# 🆕 NUEVO MODELO PARA INFORMES TÉCNICOS
+
+# Alias para mayor claridad semántica
+VehicleRepair = Repair
+
+
 class TechnicalReport(db.Model):
-    """Modelo para informes técnicos de seguros."""
-    
+    """Modelo opcional para informes técnicos detallados."""
     __tablename__ = 'technical_reports'
     
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Identificador único para archivos
     uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    insurance_company = db.Column(db.String(100), nullable=True)
+    insured_company = db.Column(db.String(100), nullable=True)
+    claim_number = db.Column(db.String(50), nullable=True)
+    incident_date = db.Column(db.Date, nullable=True)
     
-    # Información del seguro
-    insurance_company = db.Column(db.String(100), nullable=False)  # Cliente (ej: SANCOR COOP.)
-    insured_company = db.Column(db.String(100), nullable=False)    # Asegurado (ej: OSOL S.R.L)
-    claim_number = db.Column(db.String(50), nullable=False)        # Siniestro
-    incident_date = db.Column(db.Date, nullable=False)             # Fecha del siniestro
+    license_plate = db.Column(db.String(20), nullable=True)
+    brand = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(100), nullable=False)
+    problem_description = db.Column(db.Text, nullable=False)
+    technical_diagnosis = db.Column(db.Text, nullable=False)
+    diagnosis_price = db.Column(db.Float, nullable=False, default=0.0)
+    repair_price = db.Column(db.Float, nullable=True)
     
-    # Información del equipo
-    device_type = db.Column(db.String(100), nullable=False)        # Objeto (ej: Tv 43'')
-    brand = db.Column(db.String(50), nullable=False)               # Marca
-    model = db.Column(db.String(100), nullable=False)              # Modelo
-    serial_number = db.Column(db.String(100), nullable=True)       # Serie
-    problem_description = db.Column(db.Text, nullable=False)       # Detalles del problema
+    technician_name = db.Column(db.String(100), nullable=False, default='Don Orlando')
     
-    # Diagnóstico técnico
-    technical_diagnosis = db.Column(db.Text, nullable=False)       # Informe técnico detallado
-    diagnosis_price = db.Column(db.Float, nullable=False)          # Precio de diagnóstico
-    repair_price = db.Column(db.Float, nullable=True)              # Precio de reparación
-    
-    # Información del técnico
-    technician_name = db.Column(db.String(100), nullable=False, default='Leonardo A. Acosta')
-    professional_license = db.Column(db.String(20), nullable=False, default='2200')
-    
-    # Archivos de imágenes (máximo 3)
     image1_filename = db.Column(db.String(255), nullable=True)
     image2_filename = db.Column(db.String(255), nullable=True)
     image3_filename = db.Column(db.String(255), nullable=True)
     
-    # Metadatos
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relaciones
     creator = db.relationship('User', backref=db.backref('technical_reports', lazy=True))
     
-    def get_images(self):
-        """Obtener lista de imágenes no vacías."""
-        images = []
-        for i in range(1, 4):
-            filename = getattr(self, f'image{i}_filename')
-            if filename:
-                images.append({
-                    'number': i,
-                    'filename': filename,
-                    'path': f'uploads/informes/{filename}'
-                })
-        return images
-    
-    def get_upload_folder(self):
-        """Obtener carpeta de subida para este informe."""
-        return os.path.join('app', 'static', 'uploads', 'informes')
-    
-    def delete_images(self):
-        """Eliminar archivos de imágenes asociados."""
-        upload_folder = self.get_upload_folder()
-        for i in range(1, 4):
-            filename = getattr(self, f'image{i}_filename')
-            if filename:
-                file_path = os.path.join(upload_folder, filename)
-                if os.path.exists(file_path):
-                    try:
-                        os.remove(file_path)
-                    except OSError:
-                        pass  # Error silencioso si no se puede eliminar
-    
     def __repr__(self):
-        return f'<TechnicalReport {self.id}: {self.claim_number} - {self.device_type}>'
+        return f'<TechnicalReport {self.id}: {self.brand} {self.model}>'
