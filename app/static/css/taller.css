@@ -1,307 +1,254 @@
-/* app/static/css/taller.css - Estilos para Taller Mecánico Don Orlando */
+/* app/static/css/taller.css - Estilo ultra-liviano, limpio y 100% optimizado para móviles */
 
 :root {
-    --taller-dark: #1b1e23;
-    --taller-steel: #2d333b;
-    --taller-gray: #444c56;
-    --taller-accent: #c85a17;
-    --taller-accent-hover: #b0490b;
-    --taller-gold: #e5982e;
-    --taller-light: #f6f8fa;
-    --taller-border: #d0d7de;
+    --taller-bg: #f8fafc;
+    --taller-card: #ffffff;
+    --taller-text: #1e293b;
+    --taller-muted: #64748b;
+    --taller-border: #e2e8f0;
+    --taller-primary: #0284c7;
+    --taller-primary-hover: #0369a1;
+    --taller-success: #16a34a;
+    --taller-warning: #d97706;
+    --taller-danger: #dc2626;
 }
 
-/* Navbar */
+body {
+    background-color: var(--taller-bg);
+    color: var(--taller-text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px; /* Tamaño base óptimo para celulares */
+}
+
+/* Navbar limpio y blanco */
 .navbar-taller {
-    background: linear-gradient(135deg, #181a1e 0%, #292d35 100%);
-    border-bottom: 3px solid var(--taller-accent);
+    background-color: #ffffff !important;
+    border-bottom: 2px solid var(--taller-border);
 }
 
 .brand-logo-img {
-    height: 48px;
+    height: 42px;
     width: auto;
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.brand-text {
+.brand-title {
+    font-size: 1.15rem;
     font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.brand-subtitle {
+    font-size: 0.75rem;
+    color: #c25e1a;
+    font-weight: 700;
     letter-spacing: 0.5px;
-    color: #ffffff;
 }
 
-.brand-badge {
-    background-color: var(--taller-accent);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 6px;
-}
-
-/* Placa Patente Vehicular */
+/* Chapa Patente Grande y Clara */
 .license-plate-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     background-color: #ffffff;
-    color: #111111;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    color: #0f172a;
+    font-family: 'Consolas', 'Courier New', monospace;
     font-weight: 800;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     letter-spacing: 2px;
-    padding: 4px 12px;
-    border-radius: 6px;
-    border: 2px solid #222222;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-    text-transform: uppercase;
-    position: relative;
-    user-select: all;
-}
-
-.license-plate-badge.plate-sm {
-    font-size: 0.95rem;
-    padding: 2px 8px;
-    letter-spacing: 1.5px;
-}
-
-.license-plate-badge.plate-lg {
-    font-size: 1.6rem;
-    padding: 6px 18px;
-    letter-spacing: 3px;
-    border-width: 3px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 2px solid #0f172a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .license-plate-badge::before {
     content: "ARG";
-    font-size: 0.55rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #0d6efd;
-    background: #eef4ff;
-    padding: 1px 4px;
-    border-radius: 3px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #0284c7;
+    background: #e0f2fe;
+    padding: 2px 5px;
+    border-radius: 4px;
     margin-right: 8px;
 }
 
-/* Contador de días en taller */
-.badge-days-success {
-    background-color: #e6f4ea;
-    color: #137333;
-    border: 1px solid #ceead6;
-    font-weight: 700;
-    padding: 6px 10px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+.license-plate-badge.plate-sm {
+    font-size: 1rem;
+    padding: 3px 8px;
+    letter-spacing: 1px;
 }
 
-.badge-days-warning {
-    background-color: #fef7e0;
-    color: #b06000;
-    border: 1px solid #feefc3;
-    font-weight: 700;
-    padding: 6px 10px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+.license-plate-badge.plate-lg {
+    font-size: 1.6rem;
+    padding: 8px 18px;
+    letter-spacing: 3px;
+    border-width: 3px;
 }
 
-.badge-days-danger {
-    background-color: #fce8e6;
-    color: #c5221f;
-    border: 1px solid #fad2cf;
-    font-weight: 700;
-    padding: 6px 10px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    animation: pulse-soft 2s infinite;
-}
-
-.badge-days-delivered {
-    background-color: #f1f3f4;
-    color: #5f6368;
-    border: 1px solid #dadce0;
-    font-weight: 600;
-    padding: 6px 10px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-@keyframes pulse-soft {
-    0% { box-shadow: 0 0 0 0 rgba(197, 34, 31, 0.4); }
-    70% { box-shadow: 0 0 0 6px rgba(197, 34, 31, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(197, 34, 31, 0); }
-}
-
-/* Badges de estado */
-.badge-status-ingresado {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-.badge-status-diagnosticado {
-    background-color: #cfe2ff;
-    color: #084298;
-    border: 1px solid #b6d4fe;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-.badge-status-en-reparacion {
-    background-color: #fff0e6;
-    color: #c85a17;
-    border: 1px solid #ffd4bd;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-.badge-status-esperando-repuestos {
-    background-color: #f8d7da;
-    color: #842029;
-    border: 1px solid #f5c2c7;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-.badge-status-listo {
-    background-color: #d1e7dd;
-    color: #0f5132;
-    border: 1px solid #badbcc;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-.badge-status-entregado {
-    background-color: #e2e3e5;
-    color: #41464b;
-    border: 1px solid #d3d6d8;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 6px;
-}
-
-/* Tarjetas de estadísticas superiores */
-.stat-card {
-    border-radius: 10px;
-    border: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s, box-shadow 0.2s;
-    overflow: hidden;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card .card-body {
-    padding: 1.25rem 1.5rem;
-}
-
-.stat-icon {
-    font-size: 2.2rem;
-    opacity: 0.85;
-}
-
-/* Tarjeta / Fila de Vehículo */
-.vehicle-card {
+/* Tarjetas Blancas y Simples */
+.app-card {
     background: #ffffff;
+    border: 1px solid var(--taller-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 14px;
+}
+
+/* Contador de Días Simple y Destacado */
+.days-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 6px 12px;
+    border-radius: 30px;
+}
+
+.days-recent {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.days-attention {
+    background-color: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.days-delayed {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-weight: 800;
+}
+
+.days-delivered {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+/* Badges de Estado Claros */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+.status-ingresado {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.status-diagnosticado {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.status-en_reparacion {
+    background-color: #ffedd5;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.status-esperando_repuestos {
+    background-color: #fce7f3;
+    color: #be185d;
+    border: 1px solid #fbcfe8;
+}
+
+.status-listo {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.status-entregado {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+/* Botones Grandes para Dedos en Celular (mínimo 46px de alto) */
+.btn-touch {
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
     border-radius: 10px;
-    border: 1px solid #e1e4e8;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    margin-bottom: 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    touch-action: manipulation;
 }
 
-.vehicle-card:hover {
-    border-color: var(--taller-accent);
-    box-shadow: 0 4px 12px rgba(200, 90, 23, 0.12);
-}
-
-.vehicle-header {
-    background: #fafbfc;
-    border-bottom: 1px solid #f0f2f5;
-    padding: 12px 18px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-
-/* Botones con estilo Don Orlando */
-.btn-taller-primary {
-    background-color: var(--taller-accent);
-    border-color: var(--taller-accent);
-    color: #ffffff;
+.btn-touch-sm {
+    min-height: 40px;
+    font-size: 0.9rem;
     font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
 }
 
-.btn-taller-primary:hover, .btn-taller-primary:focus {
-    background-color: var(--taller-accent-hover);
-    border-color: var(--taller-accent-hover);
-    color: #ffffff;
-}
-
-.btn-taller-dark {
-    background-color: var(--taller-steel);
-    border-color: var(--taller-steel);
-    color: #ffffff;
-}
-
-.btn-taller-dark:hover {
-    background-color: var(--taller-dark);
-    border-color: var(--taller-dark);
-    color: #ffffff;
-}
-
-/* Cajas de diagnóstico y trabajo */
-.box-diagnosis {
-    background-color: #f8faff;
-    border-left: 4px solid #0d6efd;
-    padding: 14px;
+/* Cajas de Información */
+.info-box-blue {
+    background-color: #f0f9ff;
+    border-left: 4px solid var(--taller-primary);
     border-radius: 0 8px 8px 0;
+    padding: 12px;
 }
 
-.box-work {
-    background-color: #fff9f4;
-    border-left: 4px solid var(--taller-accent);
-    padding: 14px;
+.info-box-orange {
+    background-color: #fff7ed;
+    border-left: 4px solid #ea580c;
     border-radius: 0 8px 8px 0;
+    padding: 12px;
 }
 
-.box-parts {
-    background-color: #fbfbfb;
-    border-left: 4px solid #6c757d;
-    padding: 14px;
+.info-box-gray {
+    background-color: #f8fafc;
+    border-left: 4px solid #94a3b8;
     border-radius: 0 8px 8px 0;
+    padding: 12px;
 }
 
-/* Impresión */
-@media print {
-    .no-print, .navbar, .btn, .pagination {
-        display: none !important;
+/* Formularios Fáciles de Tocar */
+.form-control, .form-select {
+    min-height: 48px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    border-color: #cbd5e1;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--taller-primary);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+/* Optimización móvil */
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
     }
-    body {
-        background: #ffffff;
-        font-size: 12pt;
+    
+    .license-plate-badge {
+        font-size: 1.15rem;
+        padding: 5px 10px;
     }
-    .card {
-        border: 1px solid #333 !important;
-        box-shadow: none !important;
+
+    .btn-touch {
+        width: 100%;
+        margin-bottom: 6px;
     }
 }

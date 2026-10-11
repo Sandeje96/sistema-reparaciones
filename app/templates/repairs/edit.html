@@ -1,170 +1,110 @@
 {% extends "base.html" %}
 
-{% block title %}Editar Vehículo {{ vehicle.formatted_plate }}{% endblock %}
+{% block title %}Editar {{ vehicle.formatted_plate }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-lg-10 col-xl-9">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
-                    <span class="license-plate-badge">{{ vehicle.formatted_plate }}</span>
-                    <div>
-                        <h5 class="mb-0 fw-bold">Modificar Ficha de Vehículo</h5>
-                        <small class="text-secondary">{{ vehicle.brand }} {{ vehicle.model }}</small>
-                    </div>
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card app-card p-3 p-sm-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+                <div>
+                    <span class="license-plate-badge plate-sm">{{ vehicle.formatted_plate }}</span>
+                    <h5 class="fw-bold mb-0 mt-1 text-dark">Editar Datos</h5>
                 </div>
-                <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-x-lg me-1"></i> Cancelar
+                <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-outline-secondary btn-touch-sm">
+                    Cancelar
                 </a>
             </div>
 
-            <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('repairs.edit', id=vehicle.id) }}" novalidate>
-                    {{ form.hidden_tag() }}
+            <form method="POST" action="{{ url_for('repairs.edit', id=vehicle.id) }}" novalidate>
+                {{ form.hidden_tag() }}
 
-                    <!-- SECCIÓN 1: DATOS DEL VEHÍCULO -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-car-front-fill text-primary me-2"></i> 1. Datos del Vehículo
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">
-                                    {{ form.license_plate.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-dark text-warning fw-bold">ARG</span>
-                                    {{ form.license_plate(class="form-control text-uppercase fw-bold text-center" + (" is-invalid" if form.license_plate.errors else "")) }}
-                                </div>
-                                <div class="form-text small">XXX111 o XX111XX</div>
-                                {% for error in form.license_plate.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            </div>
+                <!-- 1. PATENTE -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Patente</label>
+                    {{ form.license_plate(class="form-control text-uppercase fw-bold text-center" + (" is-invalid" if form.license_plate.errors else ""), 
+                                         maxlength="9", style="font-size: 1.2rem; letter-spacing: 2px;") }}
+                    {% for error in form.license_plate.errors %}
+                        <div class="text-danger small mt-1 fw-bold">{{ error }}</div>
+                    {% endfor %}
+                </div>
 
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">{{ form.brand.label.text }} *</label>
-                                {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else "")) }}
-                                {% for error in form.brand.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">{{ form.model.label.text }} *</label>
-                                {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else "")) }}
-                                {% for error in form.model.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="col-6 col-md-4">
-                                <label class="form-label text-secondary">{{ form.year.label.text }}</label>
-                                {{ form.year(class="form-control") }}
-                            </div>
-
-                            <div class="col-6 col-md-4">
-                                <label class="form-label text-secondary">{{ form.color.label.text }}</label>
-                                {{ form.color(class="form-control") }}
-                            </div>
-
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-secondary">{{ form.mileage.label.text }}</label>
-                                <div class="input-group">
-                                    {{ form.mileage(class="form-control") }}
-                                    <span class="input-group-text">km</span>
-                                </div>
-                            </div>
-                        </div>
+                <!-- 2. MARCA Y MODELO -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-dark">Marca</label>
+                        {{ form.brand(class="form-control") }}
                     </div>
-
-                    <!-- SECCIÓN 2: DATOS DEL CLIENTE -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-person-fill text-success me-2"></i> 2. Cliente / Propietario
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-5">
-                                <label class="form-label fw-bold text-dark">{{ form.client_name.label.text }} *</label>
-                                {{ form.client_name(class="form-control" + (" is-invalid" if form.client_name.errors else "")) }}
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-secondary">{{ form.client_phone.label.text }}</label>
-                                {{ form.client_phone(class="form-control") }}
-                            </div>
-                            <div class="col-12 col-md-3">
-                                <label class="form-label text-secondary">{{ form.client_email.label.text }}</label>
-                                {{ form.client_email(class="form-control") }}
-                            </div>
-                        </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-dark">Modelo</label>
+                        {{ form.model(class="form-control") }}
                     </div>
+                </div>
 
-                    <!-- SECCIÓN 3: MOTIVO, DIAGNÓSTICO Y TRABAJO -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-wrench-adjustable text-warning me-2"></i> 3. Diagnóstico y Plan de Tareas
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-dark">{{ form.problem_description.label.text }} *</label>
-                                {{ form.problem_description(class="form-control") }}
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-bold text-primary">{{ form.diagnosis.label.text }}</label>
-                                {{ form.diagnosis(class="form-control") }}
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-bold" style="color: var(--taller-accent);">{{ form.work_to_do.label.text }}</label>
-                                {{ form.work_to_do(class="form-control") }}
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label text-secondary">{{ form.parts_needed.label.text }}</label>
-                                {{ form.parts_needed(class="form-control") }}
-                            </div>
-                        </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-muted small">Año</label>
+                        {{ form.year(class="form-control") }}
                     </div>
-
-                    <!-- SECCIÓN 4: ESTADO Y COSTOS -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-currency-dollar text-success me-2"></i> 4. Estado y Costos
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">{{ form.status.label.text }} *</label>
-                                {{ form.status(class="form-select") }}
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <label class="form-label text-secondary">{{ form.estimated_cost.label.text }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.estimated_cost(class="form-control") }}
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <label class="form-label text-secondary">{{ form.final_cost.label.text }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.final_cost(class="form-control") }}
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted small">Kilómetros</label>
+                        {{ form.mileage(class="form-control") }}
                     </div>
+                </div>
 
-                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                        <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-outline-secondary px-4">
-                            Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-taller-primary px-4 fw-bold">
-                            <i class="bi bi-check-lg me-1"></i> Guardar Cambios
-                        </button>
+                <!-- 3. CLIENTE -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Cliente / Dueño</label>
+                    {{ form.client_name(class="form-control") }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Teléfono / WhatsApp</label>
+                    {{ form.client_phone(class="form-control") }}
+                </div>
+
+                <!-- 4. MOTIVO, DIAGNÓSTICO Y TRABAJO -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Motivo de ingreso</label>
+                    {{ form.problem_description(class="form-control", rows=2) }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-primary">Problema detectado (Diagnóstico)</label>
+                    {{ form.diagnosis(class="form-control", rows=2) }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Trabajo a realizar</label>
+                    {{ form.work_to_do(class="form-control", rows=2) }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Repuestos necesarios</label>
+                    {{ form.parts_needed(class="form-control", rows=2) }}
+                </div>
+
+                <!-- 5. ESTADO Y COSTO -->
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-dark">Estado</label>
+                        {{ form.status(class="form-select") }}
                     </div>
-                </form>
-            </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted small fw-bold">Presupuesto ($)</label>
+                        {{ form.estimated_cost(class="form-control") }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-touch fs-5 fw-bold shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2 fs-4"></i> Guardar Cambios
+                    </button>
+                    <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-light btn-touch border text-muted">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

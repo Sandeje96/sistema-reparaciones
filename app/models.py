@@ -130,38 +130,30 @@ class Repair(db.Model):
     def get_days_badge_class(self):
         """Retorna la clase CSS para el badge de días transcurridos."""
         if self.status == self.STATUS_ENTREGADO:
-            return 'badge-days-delivered'
+            return 'days-counter days-delivered'
         days = self.days_in_shop()
         if days >= 7:
-            return 'badge-days-danger'    # Demorado (+7 días)
+            return 'days-counter days-delayed'     # Demorado (+7 días)
         elif days >= 3:
-            return 'badge-days-warning'   # En atención (3-6 días)
+            return 'days-counter days-attention'   # En atención (3-6 días)
         else:
-            return 'badge-days-success'   # Reciente (0-2 días)
+            return 'days-counter days-recent'      # Reciente (0-2 días)
             
     def get_days_badge_label(self):
-        """Texto para el badge de días."""
+        """Texto claro para el badge de días en celular."""
         if self.status == self.STATUS_ENTREGADO:
-            return f'Estuvo {self.days_in_shop()} d'
+            return f'Estuvo {self.days_in_shop()} días'
         days = self.days_in_shop()
         if days == 0:
             return 'Ingresó hoy'
         elif days == 1:
-            return '1 día'
+            return '1 día en taller'
         else:
-            return f'{days} días'
+            return f'{days} días en taller'
     
     def get_status_badge_class(self):
         """Clase CSS para el badge de estado."""
-        classes = {
-            self.STATUS_INGRESADO: 'badge-status-ingresado',
-            self.STATUS_DIAGNOSTICADO: 'badge-status-diagnosticado',
-            self.STATUS_EN_REPARACION: 'badge-status-en-reparacion',
-            self.STATUS_ESPERANDO_REPUESTOS: 'badge-status-esperando-repuestos',
-            self.STATUS_LISTO: 'badge-status-listo',
-            self.STATUS_ENTREGADO: 'badge-status-entregado',
-        }
-        return classes.get(self.status, 'badge-status-default')
+        return f'status-pill status-{self.status}'
     
     def get_status_display(self):
         """Obtener el nombre amigable del estado."""

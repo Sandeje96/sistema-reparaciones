@@ -1,225 +1,114 @@
 {% extends "base.html" %}
 
-{% block title %}Ingresar Vehículo al Taller{% endblock %}
+{% block title %}Ingresar Auto al Taller{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-lg-10 col-xl-9">
-        <!-- Tarjeta del Formulario -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-car-front-fill fs-4 text-warning me-2"></i>
-                    <div>
-                        <h5 class="mb-0 fw-bold">Nuevo Ingreso de Vehículo</h5>
-                        <small class="text-secondary">Registro inicial en Taller Mecánico Don Orlando</small>
-                    </div>
+    <div class="col-12 col-md-8 col-lg-6">
+        <!-- Tarjeta Blanca Limpia -->
+        <div class="card app-card p-3 p-sm-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">Ingresar Auto</h4>
+                    <small class="text-muted">Completar los datos para iniciar el ingreso</small>
                 </div>
-                <a href="{{ url_for('repairs.index') }}" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-arrow-left me-1"></i> Volver al Panel
+                <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary btn-touch-sm">
+                    Volver
                 </a>
             </div>
 
-            <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('repairs.add') }}" novalidate>
-                    {{ form.hidden_tag() }}
+            <form method="POST" action="{{ url_for('repairs.add') }}" novalidate>
+                {{ form.hidden_tag() }}
 
-                    <!-- SECCIÓN 1: IDENTIFICACIÓN DEL VEHÍCULO -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-tag-fill text-primary me-2"></i> 1. Identificación del Vehículo
-                        </h6>
-                        <div class="row g-3">
-                            <!-- Patente -->
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">
-                                    {{ form.license_plate.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-dark text-warning fw-bold">ARG</span>
-                                    {{ form.license_plate(class="form-control form-control-lg text-uppercase fw-bold text-center" + (" is-invalid" if form.license_plate.errors else ""), maxlength="9") }}
-                                </div>
-                                <div class="form-text small text-muted">
-                                    Formatos válidos: <strong>XXX111</strong> (ej: ABC123) o <strong>XX111XX</strong> (ej: AA123BB).
-                                </div>
-                                {% for error in form.license_plate.errors %}
-                                    <div class="text-danger small mt-1">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Marca -->
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">
-                                    {{ form.brand.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else "")) }}
-                                {% for error in form.brand.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Modelo -->
-                            <div class="col-12 col-md-4">
-                                <label class="form-label fw-bold text-dark">
-                                    {{ form.model.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else "")) }}
-                                {% for error in form.model.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Año -->
-                            <div class="col-6 col-md-4">
-                                <label class="form-label text-secondary">{{ form.year.label.text }}</label>
-                                {{ form.year(class="form-control" + (" is-invalid" if form.year.errors else "")) }}
-                                {% for error in form.year.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Color -->
-                            <div class="col-6 col-md-4">
-                                <label class="form-label text-secondary">{{ form.color.label.text }}</label>
-                                {{ form.color(class="form-control" + (" is-invalid" if form.color.errors else "")) }}
-                                {% for error in form.color.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Kilometraje -->
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-secondary">{{ form.mileage.label.text }}</label>
-                                <div class="input-group">
-                                    {{ form.mileage(class="form-control" + (" is-invalid" if form.mileage.errors else "")) }}
-                                    <span class="input-group-text">km</span>
-                                </div>
-                                {% for error in form.mileage.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                <!-- 1. PATENTE -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold fs-6 text-dark">
+                        Patente / Chapa <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 fw-bold text-primary">ARG</span>
+                        {{ form.license_plate(class="form-control text-uppercase fw-bold text-center border-start-0" + (" is-invalid" if form.license_plate.errors else ""), 
+                                             placeholder="Ej: ABC123 o AA123BB", maxlength="9", style="font-size: 1.3rem; letter-spacing: 2px;") }}
                     </div>
-
-                    <!-- SECCIÓN 2: DATOS DEL CLIENTE -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-person-badge-fill text-success me-2"></i> 2. Datos del Propietario / Cliente
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-5">
-                                <label class="form-label fw-bold text-dark">
-                                    {{ form.client_name.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.client_name(class="form-control" + (" is-invalid" if form.client_name.errors else "")) }}
-                                {% for error in form.client_name.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-secondary">{{ form.client_phone.label.text }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
-                                    {{ form.client_phone(class="form-control" + (" is-invalid" if form.client_phone.errors else "")) }}
-                                </div>
-                                {% for error in form.client_phone.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="col-12 col-md-3">
-                                <label class="form-label text-secondary">{{ form.client_email.label.text }}</label>
-                                {{ form.client_email(class="form-control" + (" is-invalid" if form.client_email.errors else "")) }}
-                                {% for error in form.client_email.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                    <div class="form-text small text-muted">
+                        Formatos válidos: <strong>XXX111</strong> (tradicional) o <strong>XX111XX</strong> (Mercosur).
                     </div>
+                    {% for error in form.license_plate.errors %}
+                        <div class="text-danger small mt-1 fw-bold">{{ error }}</div>
+                    {% endfor %}
+                </div>
 
-                    <!-- SECCIÓN 3: MOTIVO DE INGRESO -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                            <i class="bi bi-exclamation-diamond-fill text-danger me-2"></i> 3. Motivo de Ingreso / Falla Manifestada
-                        </h6>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-dark">
-                                    {{ form.problem_description.label.text }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.problem_description(class="form-control" + (" is-invalid" if form.problem_description.errors else "")) }}
-                                <div class="form-text small">
-                                    Describe los síntomas que informa el cliente (ruidos, pérdidas, luces en tablero, services, etc.).
-                                </div>
-                                {% for error in form.problem_description.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                <!-- 2. AUTO: MARCA Y MODELO -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-dark">Marca <span class="text-danger">*</span></label>
+                        {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else ""), placeholder="Ej: Ford, VW") }}
+                        {% for error in form.brand.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
-
-                    <!-- SECCIÓN 4: DIAGNÓSTICO Y TRABAJO (OPCIONAL EN EL INGRESO) -->
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                            <h6 class="fw-bold text-dark mb-0">
-                                <i class="bi bi-wrench-adjustable-circle-fill text-warning me-2"></i> 4. Diagnóstico y Tareas a Realizar <small class="text-muted fw-normal">(Opcional al ingresar)</small>
-                            </h6>
-                            <span class="badge bg-light text-secondary border">Se puede cargar o editar más tarde</span>
-                        </div>
-
-                        <div class="row g-3">
-                            <!-- Diagnóstico -->
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-secondary">{{ form.diagnosis.label.text }}</label>
-                                {{ form.diagnosis(class="form-control" + (" is-invalid" if form.diagnosis.errors else "")) }}
-                                {% for error in form.diagnosis.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Trabajo a realizar -->
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-secondary">{{ form.work_to_do.label.text }}</label>
-                                {{ form.work_to_do(class="form-control" + (" is-invalid" if form.work_to_do.errors else "")) }}
-                                {% for error in form.work_to_do.errors %}
-                                    <div class="invalid-feedback">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Repuestos -->
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-secondary">{{ form.parts_needed.label.text }}</label>
-                                {{ form.parts_needed(class="form-control" + (" is-invalid" if form.parts_needed.errors else "")) }}
-                            </div>
-
-                            <!-- Estado inicial y Presupuesto -->
-                            <div class="col-6 col-md-3">
-                                <label class="form-label fw-bold text-dark">{{ form.status.label.text }}</label>
-                                {{ form.status(class="form-select") }}
-                            </div>
-
-                            <div class="col-6 col-md-3">
-                                <label class="form-label text-secondary">{{ form.estimated_cost.label.text }}</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.estimated_cost(class="form-control") }}
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-dark">Modelo <span class="text-danger">*</span></label>
+                        {{ form.model(class="form-control" + (" is-invalid" if form.model.errors else ""), placeholder="Ej: Ranger, Gol") }}
+                        {% for error in form.model.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
+                </div>
 
-                    <!-- Botones de Acción -->
-                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                        <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary px-4">
-                            Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-taller-primary px-4 fw-bold">
-                            <i class="bi bi-check-lg me-1"></i> Registrar Ingreso del Vehículo
-                        </button>
+                <!-- 3. AÑO Y COLOR (OPCIONALES) -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-muted small">Año (opcional)</label>
+                        {{ form.year(class="form-control", placeholder="Ej: 2018") }}
                     </div>
-                </form>
-            </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted small">Kilómetros (opcional)</label>
+                        {{ form.mileage(class="form-control", placeholder="Ej: 120000") }}
+                    </div>
+                </div>
+
+                <!-- 4. DATOS DEL CLIENTE -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Nombre del Cliente <span class="text-danger">*</span></label>
+                    {{ form.client_name(class="form-control" + (" is-invalid" if form.client_name.errors else ""), placeholder="Nombre y Apellido") }}
+                    {% for error in form.client_name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark">Teléfono / WhatsApp</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-whatsapp text-success fs-5"></i></span>
+                        {{ form.client_phone(class="form-control", placeholder="Ej: 11-4567-8901") }}
+                    </div>
+                </div>
+
+                <!-- 5. MOTIVO DE INGRESO -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark">
+                        ¿Por qué entra al taller? (Motivo o Falla) <span class="text-danger">*</span>
+                    </label>
+                    {{ form.problem_description(class="form-control" + (" is-invalid" if form.problem_description.errors else ""), 
+                                                rows=3, placeholder="Ej: Hace ruido en el tren delantero al doblar, pierde agua...") }}
+                    {% for error in form.problem_description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <input type="hidden" name="status" value="ingresado">
+
+                <!-- Botón de Guardar Grande y Claro -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-touch fs-5 fw-bold shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2 fs-4"></i> Guardar e Ingresar Auto
+                    </button>
+                    <a href="{{ url_for('repairs.index') }}" class="btn btn-light btn-touch border text-muted">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
