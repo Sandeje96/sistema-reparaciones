@@ -1,73 +1,59 @@
 # run.py
 """
-Punto de entrada principal para el Sistema de Gestión de Reparaciones.
-
-Este archivo es responsable de:
-- Cargar las variables de entorno
-- Crear la instancia de la aplicación Flask
-- Ejecutar la aplicación en modo desarrollo
+Punto de entrada principal para Taller Mecánico Don Orlando.
 """
 
 import os
+import sys
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde el archivo .env
+# Asegurar codificación UTF-8 si está disponible
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 load_dotenv()
 
-from app import create_app
+from app import create_app, db
 
-# Crear la instancia de la aplicación Flask
-app = create_app()
+# Determinar configuración según entorno
+config_name = 'production' if os.environ.get('RAILWAY_ENVIRONMENT') else os.environ.get('FLASK_CONFIG', 'default')
+app = create_app(config_name)
 
-# Comandos CLI personalizados
+# Asegurar tablas y usuario inicial al arrancar el contenedor
+with app.app_context():
+    try:
+        from app.models import User
+        db.create_all()
+        admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+        admin = User.query.filter_by(username=admin_username).first()
+        if not admin:
+            admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+            admin_user = User(
+                username=admin_username,
+                is_admin=True,
+                is_active=True
+            )
+            admin_user.set_password(admin_password)
+            db.session.add(admin_user)
+            db.session.commit()
+            print(f"[OK] Usuario administrador '{admin_username}' creado.")
+        else:
+            print(f"[INFO] Usuario '{admin_username}' verificado y listo.")
+    except Exception as e:
+        print(f"[WARN] Inicialización automática de DB: {e}")
+
+# Comandos CLI
 @app.cli.command()
 def init_db():
-    """Inicializar la base de datos con tablas vacías."""
-    from app import db
-    
-    print("🔧 Creando tablas de la base de datos...")
-    db.create_all()
-    print("✅ Base de datos inicializada correctamente.")
-
-@app.cli.command()
-def create_admin():
-    """Crear un usuario administrador."""
-    from app import db
-    from app.models import User
-    from werkzeug.security import generate_password_hash
-    import getpass
-    
-    print("👤 Creando usuario administrador...")
-    
-    username = input("Nombre de usuario: ").strip()
-    if not username:
-        print("❌ El nombre de usuario es obligatorio.")
-        return
-    
-    if User.query.filter_by(username=username).first():
-        print(f"❌ El usuario '{username}' ya existe.")
-        return
-    
-    password = getpass.getpass("Contraseña: ")
-    if len(password) < 6:
-        print("❌ La contraseña debe tener al menos 6 caracteres.")
-        return
-    
-    try:
-        admin_user = User(
-            username=username,
-            password_hash=generate_password_hash(password),
-            is_admin=True
-        )
-        
-        db.session.add(admin_user)
-        db.session.commit()
-        
-        print(f"✅ Usuario administrador '{username}' creado correctamente.")
-        
-    except Exception as e:
-        print(f"❌ Error creando usuario: {e}")
-        db.session.rollback()
+    """Inicializar la base de datos."""
+    with app.app_context():
+        db.create_all()
+        print("[OK] Base de datos inicializada.")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
