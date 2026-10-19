@@ -112,23 +112,68 @@
                 {% endif %}
             </div>
 
-            <!-- Repuestos y Presupuesto -->
-            {% if vehicle.parts_needed or vehicle.estimated_cost %}
-                <div class="p-3 bg-light rounded-3 mb-3 border">
-                    {% if vehicle.parts_needed %}
-                        <div class="mb-2">
-                            <span class="text-muted small fw-bold">Repuestos necesarios:</span>
-                            <div class="text-dark small" style="white-space: pre-line;">{{ vehicle.parts_needed }}</div>
-                        </div>
-                    {% endif %}
-                    {% if vehicle.estimated_cost %}
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                            <span class="text-muted small fw-bold">Presupuesto estimado:</span>
-                            <span class="fs-5 fw-bold text-dark">${{ "%.2f"|format(vehicle.estimated_cost) }}</span>
-                        </div>
-                    {% endif %}
+            <!-- Sección: Proforma / Presupuesto con Ítems -->
+            <div class="p-3 rounded-3 mb-3 border" style="background-color: #fff7ed; border-color: #fed7aa !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                    <label class="fw-bold small text-uppercase mb-0" style="color: #c2410c;">
+                        <i class="bi bi-receipt-cutoff me-1"></i> Proforma / Presupuesto de Reparación
+                    </label>
+                    <a href="{{ url_for('repairs.proforma', id=vehicle.id) }}" class="btn btn-sm btn-warning fw-bold">
+                        <i class="bi bi-pencil-square me-1"></i> {{ 'Editar Ítems' if vehicle.items else '+ Cargar Ítems / Proforma' }}
+                    </a>
                 </div>
-            {% endif %}
+
+                {% if vehicle.items %}
+                    <div class="bg-white rounded-3 border p-2 mb-2">
+                        {% for item in vehicle.items %}
+                            <div class="d-flex justify-content-between align-items-center py-1 {{ 'border-bottom' if not loop.last else '' }}">
+                                <span class="small text-dark">{{ loop.index }}. {{ item.description }}</span>
+                                <span class="small fw-bold text-dark ms-2 text-nowrap">
+                                    ${{ "{:,.0f}".format(item.price or 0)|replace(",", ".") }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
+                            <span class="fw-bold small text-uppercase text-dark">Total Proforma:</span>
+                            <span class="fs-5 fw-bold" style="color: #c2410c;">
+                                ${{ "{:,.0f}".format(vehicle.items_total)|replace(",", ".") }}
+                            </span>
+                        </div>
+                    </div>
+                {% elif vehicle.estimated_cost %}
+                    <div class="d-flex justify-content-between align-items-center py-1 mb-2">
+                        <span class="text-muted small fw-bold">Presupuesto estimado:</span>
+                        <span class="fs-5 fw-bold text-dark">${{ "{:,.0f}".format(vehicle.estimated_cost)|replace(",", ".") }}</span>
+                    </div>
+                {% else %}
+                    <div class="small text-muted mb-2">
+                        Todavía no se cargaron ítems en la proforma de este vehículo.
+                    </div>
+                {% endif %}
+
+                {% if vehicle.parts_needed %}
+                    <div class="mb-2">
+                        <span class="text-muted small fw-bold">Notas / Repuestos:</span>
+                        <div class="text-dark small" style="white-space: pre-line;">{{ vehicle.parts_needed }}</div>
+                    </div>
+                {% endif %}
+
+                <!-- Acciones rápidas de PDF y WhatsApp desde la ficha -->
+                <div class="row g-2 mt-1">
+                    <div class="col-12 col-sm-6">
+                        <a href="{{ url_for('repairs.proforma_pdf', id=vehicle.id, download=1) }}" 
+                           class="btn btn-dark btn-touch-sm w-100 fw-bold">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> Descargar Proforma PDF
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <a href="{{ url_for('repairs.proforma', id=vehicle.id) }}" 
+                           class="btn btn-success btn-touch-sm w-100 fw-bold">
+                            <i class="bi bi-whatsapp me-1"></i> Enviar Proforma por WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <!-- Motivo de Entrada Inicial -->
             <div class="mb-4">
@@ -139,9 +184,13 @@
             <!-- Botones Grandes para Cambiar de Estado con 1 Solo Toque -->
             <div class="pt-3 border-top">
                 <label class="fw-bold small text-muted text-uppercase mb-2 d-block text-center">
-                    Cambiar estado de este auto con 1 toque:
+                    Acciones y cambio de estado con 1 toque:
                 </label>
                 <div class="d-grid gap-2">
+                    <a href="{{ url_for('repairs.proforma', id=vehicle.id) }}" class="btn btn-warning text-dark btn-touch fw-bold shadow-sm">
+                        <i class="bi bi-receipt me-2 fs-5"></i> Armar Proforma / Presupuesto (PDF y WhatsApp)
+                    </a>
+
                     <a href="{{ url_for('repairs.diagnosis', id=vehicle.id) }}" class="btn btn-primary btn-touch fw-bold">
                         <i class="bi bi-pencil-square me-2 fs-5"></i> Cargar / Modificar Diagnóstico y Trabajo
                     </a>

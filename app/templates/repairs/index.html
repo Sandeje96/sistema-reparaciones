@@ -134,15 +134,23 @@
 
                 <!-- Fila 4: Estado y Botones de Acción Táctiles -->
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top">
-                    <!-- Estado actual -->
-                    <div>
+                    <!-- Estado actual y total presupuestado si existe -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
                         <span class="{{ vehicle.get_status_badge_class() }}">
                             {{ vehicle.get_status_display() }}
                         </span>
+                        {% if vehicle.items_total or vehicle.estimated_cost %}
+                            <span class="badge bg-light text-dark border fs-6">
+                                ${{ "{:,.0f}".format(vehicle.items_total or vehicle.estimated_cost)|replace(",", ".") }}
+                            </span>
+                        {% endif %}
                     </div>
 
                     <!-- Botones Rápidos para Celular -->
-                    <div class="d-flex gap-2 flex-grow-1 justify-content-end">
+                    <div class="d-flex gap-2 flex-grow-1 justify-content-end flex-wrap">
+                        <a href="{{ url_for('repairs.proforma', id=vehicle.id) }}" class="btn btn-warning text-dark btn-touch-sm flex-fill fw-bold">
+                            <i class="bi bi-receipt me-1"></i> Proforma / PDF
+                        </a>
                         <a href="{{ url_for('repairs.diagnosis', id=vehicle.id) }}" class="btn btn-outline-primary btn-touch-sm flex-fill">
                             <i class="bi bi-pencil-square me-1"></i> Diagnóstico
                         </a>

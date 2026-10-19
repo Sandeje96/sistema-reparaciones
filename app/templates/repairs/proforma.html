@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}Proforma / Presupuesto - {{ vehicle.formatted_plate }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-9 col-lg-7">
+        <!-- Navegación superior -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-outline-secondary btn-touch-sm">
+                <i class="bi bi-arrow-left me-1"></i> Volver a la Ficha
+            </a>
+            <a href="{{ url_for('repairs.index') }}" class="btn btn-outline-secondary btn-touch-sm">
+                <i class="bi bi-list-ul me-1"></i> Lista de Autos
+            </a>
+        </div>
+
+        <!-- Tarjeta Principal de Proforma -->
+        <div class="card app-card p-3 p-sm-4 mb-3">
+            <!-- Encabezado con Patente y Vehículo -->
+            <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom flex-wrap gap-2">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="license-plate-badge plate-sm">{{ vehicle.formatted_plate }}</span>
+                        <span class="badge bg-primary rounded-pill">Orden #{{ "%04d"|format(vehicle.id) }}</span>
+                    </div>
+                    <h4 class="fw-bold mb-0 text-dark">{{ vehicle.brand }} {{ vehicle.model }}</h4>
+                    <div class="text-muted small">
+                        Cliente: <strong>{{ vehicle.client_name }}</strong>
+                        {% if vehicle.client_phone %} • <i class="bi bi-whatsapp text-success"></i> {{ vehicle.client_phone }}{% endif %}
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="text-uppercase small fw-bold text-muted d-block">Total Proforma</span>
+                    <span id="headerTotalBadge" class="fs-3 fw-bold" style="color: #c2410c;">
+                        ${{ "{:,.0f}".format(vehicle.items_total or vehicle.estimated_cost or 0)|replace(",", ".") }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Panel de Envío Rápido por WhatsApp y Descarga de PDF -->
+            <div class="p-3 rounded-3 mb-4 border" style="background-color: #f0fdf4; border-color: #bbf7d0 !important;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <div class="fw-bold text-success">
+                        <i class="bi bi-whatsapp me-1 fs-5"></i> Enviar o Descargar Proforma PDF
+                    </div>
+                    <span class="badge bg-white text-dark border small">Listo para el cliente</span>
+                </div>
+                <p class="small text-muted mb-3">
+                    Guarda los cambios si agregaste ítems nuevos antes de descargar o compartir el archivo PDF.
+                </p>
+                <div class="row g-2">
+                    <!-- Botón 1: Compartir archivo PDF directo (Web Share API para celulares/PC compatibles) -->
+                    <div class="col-12 col-sm-6">
+                        <button type="button" id="btnSharePdfNative" class="btn btn-success btn-touch w-100 fw-bold shadow-sm">
+                            <i class="bi bi-share-fill me-2"></i> Compartir Archivo PDF
+                        </button>
+                    </div>
+                    <!-- Botón 2: Descargar PDF directo -->
+                    <div class="col-12 col-sm-6">
+                        <a href="{{ url_for('repairs.proforma_pdf', id=vehicle.id, download=1) }}" 
+                           class="btn btn-dark btn-touch w-100 fw-bold shadow-sm">
+                            <i class="bi bi-file-earmark-pdf-fill me-2 text-danger"></i> Descargar PDF
+                        </a>
+                    </div>
+                    <!-- Botón 3: Enviar resumen y link del PDF directo al WhatsApp del cliente -->
+                    <div class="col-12 col-sm-8">
+                        <button type="button" id="btnSendWhatsappText" class="btn btn-outline-success bg-white btn-touch-sm w-100 fw-bold">
+                            <i class="bi bi-whatsapp me-1"></i> Enviar Resumen por WhatsApp a {{ vehicle.client_name }}
+                        </button>
+                    </div>
+                    <!-- Botón 4: Ver PDF en el navegador -->
+                    <div class="col-12 col-sm-4">
+                        <a href="{{ url_for('repairs.proforma_pdf', id=vehicle.id, download=0) }}" 
+                           target="_blank" class="btn btn-outline-secondary bg-white btn-touch-sm w-100 fw-bold">
+                            <i class="bi bi-eye me-1"></i> Vista Previa PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario para Cargar Ítems a Reparar -->
+            <form method="POST" action="{{ url_for('repairs.proforma', id=vehicle.id) }}" id="proformaForm">
+                <!-- Diagnóstico resumido (Opcional, sale en el PDF) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase text-primary">
+                        <i class="bi bi-search me-1"></i> Diagnóstico / Problema Detectado (aparece en la Proforma)
+                    </label>
+                    <textarea name="diagnosis" class="form-control" rows="2" 
+                              placeholder="Ej: Revisión de tren delantero y sistema de frenos...">{{ vehicle.diagnosis or '' }}</textarea>
+                </div>
+
+                <!-- Lista Dinámica de Ítems (Descripción + Precio) -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold fs-6 text-dark mb-0">
+                            <i class="bi bi-list-check me-1 text-primary"></i> Ítems a Reparar / Presupuesto
+                        </label>
+                        <button type="button" id="btnAddItem" class="btn btn-sm btn-primary fw-bold px-3 py-2 rounded-3">
+                            <i class="bi bi-plus-lg me-1"></i> + Agregar Ítem
+                        </button>
+                    </div>
+
+                    <div id="itemsContainer" class="d-flex flex-column gap-2">
+                        {% if vehicle.items %}
+                            {% for item in vehicle.items %}
+                                <div class="item-row p-2 bg-light rounded-3 border">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-12 col-sm-7">
+                                            <label class="small text-muted d-sm-none fw-bold">Descripción del ítem o trabajo:</label>
+                                            <input type="text" name="item_description[]" value="{{ item.description }}" 
+                                                   class="form-control item-desc-input" 
+                                                   placeholder="Ej: Cambio de pastillas de freno delanteras" required>
+                                        </div>
+                                        <div class="col-9 col-sm-4">
+                                            <label class="small text-muted d-sm-none fw-bold">Precio ($):</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white fw-bold">$</span>
+                                                <input type="number" step="any" min="0" name="item_price[]" 
+                                                       value="{{ item.price|int if item.price and item.price.is_integer() else (item.price or 0) }}" 
+                                                       class="form-control item-price-input fw-bold text-end" 
+                                                       placeholder="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-3 col-sm-1 text-end">
+                                            <button type="button" class="btn btn-outline-danger btn-remove-item w-100 py-2" title="Quitar ítem">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Fila inicial por defecto (precargada con work_to_do si había algo escrito) -->
+                            <div class="item-row p-2 bg-light rounded-3 border">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-12 col-sm-7">
+                                        <label class="small text-muted d-sm-none fw-bold">Descripción del ítem o trabajo:</label>
+                                        <input type="text" name="item_description[]" 
+                                               value="{{ vehicle.work_to_do.split('\n')[0]|replace('• ', '') if vehicle.work_to_do else '' }}" 
+                                               class="form-control item-desc-input" 
+                                               placeholder="Ej: Mano de obra cambio de embrague / Repuesto..." required>
+                                    </div>
+                                    <div class="col-9 col-sm-4">
+                                        <label class="small text-muted d-sm-none fw-bold">Precio ($):</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white fw-bold">$</span>
+                                            <input type="number" step="any" min="0" name="item_price[]" 
+                                                   value="{{ vehicle.estimated_cost|int if vehicle.estimated_cost and vehicle.estimated_cost.is_integer() else (vehicle.estimated_cost or '') }}" 
+                                                   class="form-control item-price-input fw-bold text-end" 
+                                                   placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-3 col-sm-1 text-end">
+                                        <button type="button" class="btn btn-outline-danger btn-remove-item w-100 py-2" title="Quitar ítem">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botón grande para agregar otra fila fácilmente desde el celular -->
+                    <button type="button" id="btnAddItemBottom" class="btn btn-outline-primary btn-touch-sm w-100 mt-2 fw-bold border-2">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Agregar otro ítem a la lista
+                    </button>
+                </div>
+
+                <!-- Caja de Total Calculado en Vivo -->
+                <div class="p-3 rounded-3 mb-3 d-flex justify-content-between align-items-center border" 
+                     style="background-color: #fff7ed; border-color: #fed7aa !important;">
+                    <span class="fw-bold text-uppercase text-dark">Total Calculado:</span>
+                    <span id="liveTotalAmount" class="fs-3 fw-bold" style="color: #c2410c;">$0</span>
+                </div>
+
+                <!-- Observaciones / Notas al pie (Opcional) -->
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase">
+                        <i class="bi bi-card-text me-1"></i> Notas / Repuestos / Condiciones (Opcional)
+                    </label>
+                    <textarea name="parts_needed" class="form-control" rows="2" 
+                              placeholder="Ej: Presupuesto válido por 7 días. Incluye repuestos originales...">{{ vehicle.parts_needed or '' }}</textarea>
+                </div>
+
+                <!-- Botones de Guardado -->
+                <div class="d-grid gap-2">
+                    <button type="submit" name="action" value="save" class="btn btn-primary btn-touch fs-5 fw-bold shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i> Guardar Proforma / Presupuesto
+                    </button>
+                    <button type="submit" name="action" value="save_and_download" class="btn btn-dark btn-touch fw-bold">
+                        <i class="bi bi-file-earmark-arrow-down-fill me-2 text-warning"></i> Guardar y Descargar PDF Ahora
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsContainer = document.getElementById('itemsContainer');
+    const btnAddItem = document.getElementById('btnAddItem');
+    const btnAddItemBottom = document.getElementById('btnAddItemBottom');
+    const liveTotalAmount = document.getElementById('liveTotalAmount');
+    const headerTotalBadge = document.getElementById('headerTotalBadge');
+    const btnSharePdfNative = document.getElementById('btnSharePdfNative');
+    const btnSendWhatsappText = document.getElementById('btnSendWhatsappText');
+
+    const pdfUrl = "{{ url_for('repairs.proforma_pdf', id=vehicle.id, download=1, _external=True) }}";
+    const pdfFilename = "Proforma_{{ vehicle.clean_plate(vehicle.license_plate) }}_{{ vehicle.brand|replace(' ', '_') }}.pdf";
+    const clientPhone = "{{ vehicle.clean_whatsapp_phone }}";
+    const clientName = "{{ vehicle.client_name }}";
+    const vehicleTitle = "{{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.formatted_plate }})";
+
+    function formatMoney(num) {
+        const val = Number(num) || 0;
+        return '$' + val.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        const priceInputs = itemsContainer.querySelectorAll('.item-price-input');
+        priceInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (!isNaN(val) && val > 0) {
+                total += val;
+            }
+        });
+        const formatted = formatMoney(total);
+        liveTotalAmount.textContent = formatted;
+        if (headerTotalBadge) {
+            headerTotalBadge.textContent = formatted;
+        }
+        return total;
+    }
+
+    function createItemRow(desc = '', price = '') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'item-row p-2 bg-light rounded-3 border';
+        wrapper.innerHTML = `
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-sm-7">
+                    <label class="small text-muted d-sm-none fw-bold">Descripción del ítem o trabajo:</label>
+                    <input type="text" name="item_description[]" value="${desc}" 
+                           class="form-control item-desc-input" 
+                           placeholder="Ej: Cambio de filtro y aceite / Mano de obra..." required>
+                </div>
+                <div class="col-9 col-sm-4">
+                    <label class="small text-muted d-sm-none fw-bold">Precio ($):</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white fw-bold">$</span>
+                        <input type="number" step="any" min="0" name="item_price[]" value="${price}" 
+                               class="form-control item-price-input fw-bold text-end" 
+                               placeholder="0">
+                    </div>
+                </div>
+                <div class="col-3 col-sm-1 text-end">
+                    <button type="button" class="btn btn-outline-danger btn-remove-item w-100 py-2" title="Quitar ítem">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        return wrapper;
+    }
+
+    function addRow() {
+        const newRow = createItemRow();
+        itemsContainer.appendChild(newRow);
+        const descInput = newRow.querySelector('.item-desc-input');
+        if (descInput) descInput.focus();
+        calculateTotal();
+    }
+
+    btnAddItem.addEventListener('click', addRow);
+    btnAddItemBottom.addEventListener('click', addRow);
+
+    itemsContainer.addEventListener('input', function(e) {
+        if (e.target.classList.contains('item-price-input')) {
+            calculateTotal();
+        }
+    });
+
+    itemsContainer.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.btn-remove-item');
+        if (removeBtn) {
+            const rows = itemsContainer.querySelectorAll('.item-row');
+            if (rows.length > 1) {
+                removeBtn.closest('.item-row').remove();
+            } else {
+                // Si es la única fila, limpiar sus campos
+                const row = removeBtn.closest('.item-row');
+                row.querySelector('.item-desc-input').value = '';
+                row.querySelector('.item-price-input').value = '';
+            }
+            calculateTotal();
+        }
+    });
+
+    // 1. Botón de Compartir Archivo PDF Nativo (adjunta el PDF directo en WhatsApp desde celular/PC compatible)
+    btnSharePdfNative.addEventListener('click', async function() {
+        const originalHtml = btnSharePdfNative.innerHTML;
+        btnSharePdfNative.disabled = true;
+        btnSharePdfNative.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Preparando PDF...';
+
+        try {
+            const response = await fetch(pdfUrl);
+            const blob = await response.blob();
+            const file = new File([blob], pdfFilename, { type: 'application/pdf' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: `Presupuesto - ${vehicleTitle}`,
+                    text: `Hola ${clientName}, te adjuntamos el presupuesto / proforma de tu ${vehicleTitle} - Taller Mecánico Don Orlando.`,
+                    files: [file]
+                });
+            } else {
+                // En PC o navegadores sin soporte de compartir archivos nativos, descarga el PDF y abre WhatsApp
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = pdfFilename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                alert('El archivo PDF se descargó en tu dispositivo. Ahora podés adjuntarlo en el chat de WhatsApp que se abrirá a continuación.');
+                btnSendWhatsappText.click();
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                window.location.href = pdfUrl;
+            }
+        } finally {
+            btnSharePdfNative.disabled = false;
+            btnSharePdfNative.innerHTML = originalHtml;
+        }
+    });
+
+    // 2. Botón de Enviar Resumen y Link por WhatsApp (wa.me)
+    btnSendWhatsappText.addEventListener('click', function() {
+        const rows = itemsContainer.querySelectorAll('.item-row');
+        let itemsLines = [];
+        rows.forEach(row => {
+            const desc = row.querySelector('.item-desc-input').value.trim();
+            const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
+            if (desc) {
+                itemsLines.push(`• ${desc}: *${formatMoney(price)}*`);
+            }
+        });
+
+        const total = calculateTotal();
+        let msg = `Hola *${clientName}*, te enviamos el presupuesto / proforma de *Taller Mecánico Don Orlando* para tu *${vehicleTitle}*:\n\n`;
+        if (itemsLines.length > 0) {
+            msg += `*Detalle de trabajos / ítems:*\n` + itemsLines.join('\n') + `\n\n`;
+        }
+        msg += `*TOTAL PRESUPUESTADO: ${formatMoney(total)}*\n\n`;
+        msg += `📄 Podés descargar el PDF de la proforma acá:\n${pdfUrl}`;
+
+        const waBase = clientPhone ? `https://wa.me/${clientPhone}` : `https://wa.me/`;
+        const waUrl = `${waBase}?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank');
+    });
+
+    // Calcular total al iniciar
+    calculateTotal();
+});
+</script>
+{% endblock %}

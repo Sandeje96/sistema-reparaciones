@@ -107,6 +107,15 @@ def init_database():
             )
             
             db.session.add_all([v1, v2, v3])
+            db.session.flush()
+            
+            from app.models import RepairItem
+            items_v1 = [
+                RepairItem(repair_id=v1.id, description='Manguera de intercooler original Ford', price=85000.0, order_index=1),
+                RepairItem(repair_id=v1.id, description='Limpieza de válvula EGR por ultrasonido y junta nueva', price=55000.0, order_index=2),
+                RepairItem(repair_id=v1.id, description='Mano de obra de reemplazo y escaneo computarizado', price=45000.0, order_index=3),
+            ]
+            db.session.add_all(items_v1)
             db.session.commit()
             print("✅ 3 vehículos de prueba registrados con éxito.")
             print("   - [AA 123 BB] Ford Ranger (5 días - En reparación)")

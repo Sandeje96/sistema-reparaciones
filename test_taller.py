@@ -110,6 +110,30 @@ def run_tests():
         assert dash_res.status_code == 200
         assert b"Tablero de Control del Taller" in dash_res.data
         print("   ✅ Dashboard de estadísticas funciona correctamente.")
+
+        print("\n🔍 9. Probando carga de Proforma (ítems + cálculo automático) y generación de PDF...")
+        proforma_res = client.post(f'/repairs/{v.id}/proforma', data={
+            'diagnosis': 'Pastillas de freno delanteras gastadas y discos rayados.',
+            'item_description[]': [
+                'Juego de pastillas de freno delanteras Fras-le',
+                'Rectificado de ambos discos delanteros',
+                'Mano de obra y purga con líquido DOT 4'
+            ],
+            'item_price[]': ['42000', '28000', '35000'],
+            'parts_needed': 'Presupuesto válido por 10 días.',
+            'action': 'save'
+        }, follow_redirects=True)
+        assert proforma_res.status_code == 200
+        v_proforma = Repair.query.get(v.id)
+        assert len(v_proforma.items) == 3, f"Se esperaban 3 ítems, se encontraron {len(v_proforma.items)}"
+        assert v_proforma.items_total == 105000.0, f"Total esperado 105000.0, obtenido {v_proforma.items_total}"
+        assert v_proforma.estimated_cost == 105000.0
+
+        pdf_res = client.get(f'/repairs/{v.id}/proforma/pdf?download=1')
+        assert pdf_res.status_code == 200
+        assert pdf_res.mimetype == 'application/pdf'
+        assert pdf_res.data.startswith(b'%PDF'), "El archivo devuelto no es un PDF válido"
+        print(f"   ✅ Proforma guardada ({len(v_proforma.items)} ítems, Total: ${v_proforma.items_total:,.0f}) y PDF generado ({len(pdf_res.data)} bytes).")
         
         print("\n🎉 ¡TODAS LAS PRUEBAS PASARON EXITOSAMENTE! 🎉")
 

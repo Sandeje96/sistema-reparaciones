@@ -3,12 +3,14 @@
 Rutas para la gestión de vehículos y reparaciones en el Taller Mecánico Don Orlando.
 """
 
+import os
 from datetime import datetime, timedelta
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, send_file
 from flask_login import login_required, current_user
 from app.repairs import bp
 from app.repairs.forms import RepairForm, DiagnosisWorkForm, SearchForm
-from app.models import Repair
+from app.repairs.utils import generate_proforma_pdf
+from app.models import Repair, RepairItem
 from app import db
 
 
@@ -266,6 +268,101 @@ def change_status(id, new_status):
     # Redirigir según el referer o a la ficha
     next_page = request.referrer or url_for('repairs.view', id=vehicle.id)
     return redirect(next_page)
+
+
+@bp.route('/<int:id>/proforma', methods=['GET', 'POST'])
+@login_required
+def proforma(id):
+    """Cargar o editar los ítems a reparar para la Proforma / Presupuesto del cliente."""
+    vehicle = Repair.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        descriptions = request.form.getlist('item_description[]')
+        prices = request.form.getlist('item_price[]')
+        diagnosis_text = request.form.get('diagnosis', '').strip()
+        notes_text = request.form.get('parts_needed', '').strip()
+        
+        # Actualizar diagnóstico y observaciones si se modificaron desde esta pantalla
+        if diagnosis_text:
+            vehicle.diagnosis = diagnosis_text
+            if not vehicle.diagnosis_date:
+                vehicle.diagnosis_date = datetime.utcnow()
+        if 'parts_needed' in request.form:
+            vehicle.parts_needed = notes_text if notes_text else None
+            
+        # Reemplazar los ítems actuales por las nuevas filas válidas
+        RepairItem.query.filter_by(repair_id=vehicle.id).delete()
+        
+        total_cost = 0.0
+        work_lines = []
+        valid_idx = 0
+        
+        for desc, raw_price in zip(descriptions, prices):
+            clean_desc = (desc or '').strip()
+            if not clean_desc:
+                continue
+            try:
+                clean_price = float(str(raw_price).replace(',', '.').strip() or 0.0)
+            except ValueError:
+                clean_price = 0.0
+                
+            valid_idx += 1
+            item = RepairItem(
+                repair_id=vehicle.id,
+                description=clean_desc,
+                price=max(0.0, clean_price),
+                order_index=valid_idx
+            )
+            db.session.add(item)
+            total_cost += max(0.0, clean_price)
+            work_lines.append(f"• {clean_desc}")
+            
+        # Sincronizar presupuesto estimado y resumen de trabajo a realizar
+        vehicle.estimated_cost = total_cost
+        if work_lines:
+            vehicle.work_to_do = "\n".join(work_lines)
+        if vehicle.status == Repair.STATUS_INGRESADO and valid_idx > 0:
+            vehicle.status = Repair.STATUS_DIAGNOSTICADO
+            
+        db.session.commit()
+        
+        # Generar el PDF actualizado inmediatamente para tenerlo listo
+        try:
+            generate_proforma_pdf(vehicle)
+        except Exception as e:
+            print(f"Aviso generando PDF tras guardar proforma: {e}")
+            
+        action = request.form.get('action', 'save')
+        if action == 'save_and_download':
+            return redirect(url_for('repairs.proforma_pdf', id=vehicle.id, download=1))
+            
+        flash(f'¡Proforma / Presupuesto de [{vehicle.formatted_plate}] guardado con éxito! ({valid_idx} ítems - Total: ${total_cost:,.0f})', 'success')
+        return redirect(url_for('repairs.proforma', id=vehicle.id))
+        
+    return render_template('repairs/proforma.html', vehicle=vehicle)
+
+
+@bp.route('/<int:id>/proforma/pdf')
+@login_required
+def proforma_pdf(id):
+    """Genera y sirve el archivo PDF de la Proforma (para descargar o compartir por WhatsApp)."""
+    vehicle = Repair.query.get_or_404(id)
+    download = request.args.get('download', '1') == '1'
+    
+    try:
+        pdf_path = generate_proforma_pdf(vehicle)
+        safe_plate = vehicle.clean_plate(vehicle.license_plate) or f"Auto_{vehicle.id}"
+        download_name = f"Proforma_{safe_plate}_{vehicle.brand}_{vehicle.model}.pdf".replace(' ', '_')
+        
+        return send_file(
+            pdf_path,
+            as_attachment=download,
+            download_name=download_name,
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        flash(f'Error al generar el PDF de la proforma: {str(e)}', 'danger')
+        return redirect(url_for('repairs.proforma', id=vehicle.id))
 
 
 @bp.route('/<int:id>/delete', methods=['POST'])

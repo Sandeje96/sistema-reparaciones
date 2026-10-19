@@ -170,8 +170,49 @@ class Repair(db.Model):
         year_str = f" ({self.year})" if self.year else ""
         return f"{self.brand} {self.model}{year_str}"
         
+    @property
+    def items_total(self):
+        """Suma total de todos los ítems de la proforma/presupuesto."""
+        return sum((item.price or 0.0) for item in self.items)
+        
+    @property
+    def clean_whatsapp_phone(self):
+        """Normaliza el teléfono para enlaces de WhatsApp (wa.me)."""
+        if not self.client_phone:
+            return ''
+        digits = re.sub(r'\D', '', self.client_phone)
+        if not digits:
+            return ''
+        # Si es un celular argentino de 10 dígitos sin código de país (ej: 1145678901), anteponer 549
+        if len(digits) == 10 and not digits.startswith('54'):
+            return f"549{digits}"
+        return digits
+
     def __repr__(self):
         return f'<Vehículo {self.license_plate}: {self.brand} {self.model}>'
+
+
+class RepairItem(db.Model):
+    """
+    Ítem individual de presupuesto / proforma para una reparación.
+    Cada fila tiene una descripción (repuesto, mano de obra o tarea) y su precio.
+    """
+    __tablename__ = 'repair_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    repair_id = db.Column(db.Integer, db.ForeignKey('repairs.id', ondelete='CASCADE'), nullable=False, index=True)
+    description = db.Column(db.String(300), nullable=False)
+    price = db.Column(db.Float, nullable=False, default=0.0)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    repair = db.relationship(
+        'Repair',
+        backref=db.backref('items', lazy=True, order_by='RepairItem.order_index, RepairItem.id', cascade='all, delete-orphan')
+    )
+    
+    def __repr__(self):
+        return f'<RepairItem {self.id}: {self.description} (${self.price})>'
 
 
 # Alias para mayor claridad semántica
