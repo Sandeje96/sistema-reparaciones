@@ -17,7 +17,7 @@ if sys.stdout.encoding != 'utf-8':
 
 from datetime import datetime, timedelta
 from app import create_app, db
-from app.models import User, Repair
+from app.models import User, Repair, RepairItem
 
 def init_database():
     app = create_app('development')
@@ -25,6 +25,17 @@ def init_database():
     with app.app_context():
         print("🔧 Creando tablas de la base de datos...")
         db.create_all()
+        
+        # Verificar si falta la columna item_type en repair_items
+        inspector = db.inspect(db.engine)
+        if 'repair_items' in inspector.get_table_names():
+            cols = [c['name'] for c in inspector.get_columns('repair_items')]
+            if 'item_type' not in cols:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text("ALTER TABLE repair_items ADD COLUMN item_type VARCHAR(20) NOT NULL DEFAULT 'mano_obra'"))
+                    conn.commit()
+                    print("✅ Columna 'item_type' agregada a 'repair_items'.")
+
         print("✅ Tablas creadas correctamente.")
         
         # 1. Crear usuario administrador
@@ -109,11 +120,10 @@ def init_database():
             db.session.add_all([v1, v2, v3])
             db.session.flush()
             
-            from app.models import RepairItem
             items_v1 = [
-                RepairItem(repair_id=v1.id, description='Manguera de intercooler original Ford', price=85000.0, order_index=1),
-                RepairItem(repair_id=v1.id, description='Limpieza de válvula EGR por ultrasonido y junta nueva', price=55000.0, order_index=2),
-                RepairItem(repair_id=v1.id, description='Mano de obra de reemplazo y escaneo computarizado', price=45000.0, order_index=3),
+                RepairItem(repair_id=v1.id, item_type=RepairItem.TYPE_REPUESTO, description='Manguera de intercooler original Ford', price=85000.0, order_index=1),
+                RepairItem(repair_id=v1.id, item_type=RepairItem.TYPE_MANO_OBRA, description='Limpieza de válvula EGR por ultrasonido y junta nueva', price=55000.0, order_index=2),
+                RepairItem(repair_id=v1.id, item_type=RepairItem.TYPE_MANO_OBRA, description='Mano de obra de reemplazo y escaneo computarizado', price=45000.0, order_index=3),
             ]
             db.session.add_all(items_v1)
             db.session.commit()

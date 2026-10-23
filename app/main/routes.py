@@ -82,8 +82,8 @@ def dashboard():
 def ingresos():
     """
     Sección de ingresos mensuales y liquidación de comisiones:
-    - Daniel (Mecánico): 70% de los arreglos
-    - Titular (Vos): 30% de los arreglos
+    - Daniel (Mecánico): 70% de la Mano de Obra
+    - Titular (Vos): 30% de la Mano de Obra + 100% de los Repuestos
     """
     now = datetime.utcnow()
     selected_year = request.args.get('year', now.year, type=int)
@@ -116,12 +116,17 @@ def ingresos():
                 pending_repairs.append(r)
                 
     total_confirmed = sum(r.effective_revenue for r in confirmed_repairs)
-    daniel_confirmed = round(total_confirmed * 0.70, 2)
-    owner_confirmed = round(total_confirmed * 0.30, 2)
+    labor_confirmed = sum(r.labor_revenue for r in confirmed_repairs)
+    parts_confirmed = sum(r.parts_revenue for r in confirmed_repairs)
+    daniel_confirmed = round(sum(r.daniel_share for r in confirmed_repairs), 2)
+    owner_labor_confirmed = round(sum(r.owner_labor_share for r in confirmed_repairs), 2)
+    owner_confirmed = round(sum(r.owner_share for r in confirmed_repairs), 2)
     
     total_pending = sum(r.effective_revenue for r in pending_repairs)
-    daniel_pending = round(total_pending * 0.70, 2)
-    owner_pending = round(total_pending * 0.30, 2)
+    labor_pending = sum(r.labor_revenue for r in pending_repairs)
+    parts_pending = sum(r.parts_revenue for r in pending_repairs)
+    daniel_pending = round(sum(r.daniel_share for r in pending_repairs), 2)
+    owner_pending = round(sum(r.owner_share for r in pending_repairs), 2)
     
     available_years = sorted(years_set, reverse=True)
     month_name = MESES_ES.get(selected_month, '')
@@ -137,10 +142,15 @@ def ingresos():
         pending_repairs=pending_repairs,
         summary={
             'total_confirmed': total_confirmed,
+            'labor_confirmed': labor_confirmed,
+            'parts_confirmed': parts_confirmed,
             'daniel_confirmed': daniel_confirmed,
+            'owner_labor_confirmed': owner_labor_confirmed,
             'owner_confirmed': owner_confirmed,
             'count_confirmed': len(confirmed_repairs),
             'total_pending': total_pending,
+            'labor_pending': labor_pending,
+            'parts_pending': parts_pending,
             'daniel_pending': daniel_pending,
             'owner_pending': owner_pending,
             'count_pending': len(pending_repairs)

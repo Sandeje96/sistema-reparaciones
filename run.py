@@ -23,11 +23,22 @@ from app import create_app, db
 config_name = 'production' if os.environ.get('RAILWAY_ENVIRONMENT') else os.environ.get('FLASK_CONFIG', 'default')
 app = create_app(config_name)
 
-# Asegurar tablas y usuario inicial al arrancar el contenedor
+# Asegurar tablas, migraciones ligeras y usuario inicial al arrancar el contenedor
 with app.app_context():
     try:
         from app.models import User
         db.create_all()
+        
+        # Verificar si falta la columna item_type en repair_items (migración automática)
+        inspector = db.inspect(db.engine)
+        if 'repair_items' in inspector.get_table_names():
+            cols = [c['name'] for c in inspector.get_columns('repair_items')]
+            if 'item_type' not in cols:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text("ALTER TABLE repair_items ADD COLUMN item_type VARCHAR(20) NOT NULL DEFAULT 'mano_obra'"))
+                    conn.commit()
+                    print("[OK] Columna 'item_type' agregada a 'repair_items'.")
+
         admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
         admin = User.query.filter_by(username=admin_username).first()
         if not admin:

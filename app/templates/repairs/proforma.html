@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-md-9 col-lg-7">
+    <div class="col-12 col-md-10 col-lg-8">
         <!-- Navegación superior -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <a href="{{ url_for('repairs.view', id=vehicle.id) }}" class="btn btn-outline-secondary btn-touch-sm">
@@ -90,12 +90,17 @@
                               placeholder="Ej: Revisión de tren delantero y sistema de frenos...">{{ vehicle.diagnosis or '' }}</textarea>
                 </div>
 
-                <!-- Lista Dinámica de Ítems (Descripción + Precio) -->
+                <!-- Lista Dinámica de Ítems (Tipo + Descripción + Precio) -->
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label fw-bold fs-6 text-dark mb-0">
-                            <i class="bi bi-list-check me-1 text-primary"></i> Ítems a Reparar / Presupuesto
-                        </label>
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div>
+                            <label class="form-label fw-bold fs-6 text-dark mb-0">
+                                <i class="bi bi-list-check me-1 text-primary"></i> Ítems a Reparar (Mano de Obra vs Repuestos)
+                            </label>
+                            <div class="small text-muted">
+                                🔧 <strong>Mano de Obra</strong>: se divide 70% Daniel / 30% Vos • 📦 <strong>Repuesto</strong>: 100% para Vos
+                            </div>
+                        </div>
                         <button type="button" id="btnAddItem" class="btn btn-sm btn-primary fw-bold px-3 py-2 rounded-3">
                             <i class="bi bi-plus-lg me-1"></i> + Agregar Ítem
                         </button>
@@ -106,13 +111,20 @@
                             {% for item in vehicle.items %}
                                 <div class="item-row p-2 bg-light rounded-3 border">
                                     <div class="row g-2 align-items-center">
-                                        <div class="col-12 col-sm-7">
-                                            <label class="small text-muted d-sm-none fw-bold">Descripción del ítem o trabajo:</label>
+                                        <div class="col-12 col-sm-3">
+                                            <label class="small text-muted d-sm-none fw-bold">Tipo:</label>
+                                            <select name="item_type[]" class="form-select item-type-select fw-bold">
+                                                <option value="mano_obra" {% if item.item_type != 'repuesto' %}selected{% endif %}>🔧 Mano de Obra</option>
+                                                <option value="repuesto" {% if item.item_type == 'repuesto' %}selected{% endif %}>📦 Repuesto</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-sm-5">
+                                            <label class="small text-muted d-sm-none fw-bold">Descripción:</label>
                                             <input type="text" name="item_description[]" value="{{ item.description }}" 
                                                    class="form-control item-desc-input" 
                                                    placeholder="Ej: Cambio de pastillas de freno delanteras" required>
                                         </div>
-                                        <div class="col-9 col-sm-4">
+                                        <div class="col-9 col-sm-3">
                                             <label class="small text-muted d-sm-none fw-bold">Precio ($):</label>
                                             <div class="input-group">
                                                 <span class="input-group-text bg-white fw-bold">$</span>
@@ -131,17 +143,24 @@
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <!-- Fila inicial por defecto (precargada con work_to_do si había algo escrito) -->
+                            <!-- Fila inicial por defecto -->
                             <div class="item-row p-2 bg-light rounded-3 border">
                                 <div class="row g-2 align-items-center">
-                                    <div class="col-12 col-sm-7">
-                                        <label class="small text-muted d-sm-none fw-bold">Descripción del ítem o trabajo:</label>
+                                    <div class="col-12 col-sm-3">
+                                        <label class="small text-muted d-sm-none fw-bold">Tipo:</label>
+                                        <select name="item_type[]" class="form-select item-type-select fw-bold">
+                                            <option value="mano_obra" selected>🔧 Mano de Obra</option>
+                                            <option value="repuesto">📦 Repuesto</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-sm-5">
+                                        <label class="small text-muted d-sm-none fw-bold">Descripción:</label>
                                         <input type="text" name="item_description[]" 
                                                value="{{ vehicle.work_to_do.split('\n')[0]|replace('• ', '') if vehicle.work_to_do else '' }}" 
                                                class="form-control item-desc-input" 
                                                placeholder="Ej: Mano de obra cambio de embrague / Repuesto..." required>
                                     </div>
-                                    <div class="col-9 col-sm-4">
+                                    <div class="col-9 col-sm-3">
                                         <label class="small text-muted d-sm-none fw-bold">Precio ($):</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white fw-bold">$</span>
@@ -161,23 +180,51 @@
                         {% endif %}
                     </div>
 
-                    <!-- Botón grande para agregar otra fila fácilmente desde el celular -->
-                    <button type="button" id="btnAddItemBottom" class="btn btn-outline-primary btn-touch-sm w-100 mt-2 fw-bold border-2">
-                        <i class="bi bi-plus-circle-fill me-1"></i> Agregar otro ítem a la lista
-                    </button>
+                    <!-- Botones grandes para agregar fila de Mano de Obra o Repuesto rápido desde el celular -->
+                    <div class="row g-2 mt-2">
+                        <div class="col-6">
+                            <button type="button" id="btnAddLaborBottom" class="btn btn-outline-primary btn-touch-sm w-100 fw-bold border-2">
+                                <i class="bi bi-wrench me-1"></i> + Mano de Obra
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" id="btnAddPartBottom" class="btn btn-outline-secondary btn-touch-sm w-100 fw-bold border-2 text-dark">
+                                <i class="bi bi-box-seam me-1"></i> + Repuesto
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Caja de Total Calculado en Vivo -->
-                <div class="p-3 rounded-3 mb-3 d-flex justify-content-between align-items-center border" 
-                     style="background-color: #fff7ed; border-color: #fed7aa !important;">
-                    <span class="fw-bold text-uppercase text-dark">Total Calculado:</span>
-                    <span id="liveTotalAmount" class="fs-3 fw-bold" style="color: #c2410c;">$0</span>
+                <!-- Caja de Desglose y Total Calculado en Vivo -->
+                <div class="p-3 rounded-3 mb-3 border" style="background-color: #fff7ed; border-color: #fed7aa !important;">
+                    <div class="row g-2 mb-2 pb-2 border-bottom small">
+                        <div class="col-6 col-sm-3">
+                            <span class="text-muted d-block">Subtotal Mano de Obra:</span>
+                            <strong id="liveLaborSubtotal" class="text-dark fs-6">$0</strong>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <span class="text-muted d-block">Subtotal Repuestos (100% Vos):</span>
+                            <strong id="livePartsSubtotal" class="text-dark fs-6">$0</strong>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <span class="text-primary d-block">Parte Daniel (70% M.O.):</span>
+                            <strong id="liveDanielShare" class="text-primary fs-6">$0</strong>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <span class="text-success d-block">Tu Parte (30% M.O. + Rep.):</span>
+                            <strong id="liveOwnerShare" class="text-success fs-6">$0</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-uppercase text-dark">Total Presupuesto al Cliente:</span>
+                        <span id="liveTotalAmount" class="fs-3 fw-bold" style="color: #c2410c;">$0</span>
+                    </div>
                 </div>
 
                 <!-- Observaciones / Notas al pie (Opcional) -->
                 <div class="mb-4">
                     <label class="form-label text-muted small fw-bold text-uppercase">
-                        <i class="bi bi-card-text me-1"></i> Notas / Repuestos / Condiciones (Opcional)
+                        <i class="bi bi-card-text me-1"></i> Notas / Condiciones (Opcional)
                     </label>
                     <textarea name="parts_needed" class="form-control" rows="2" 
                               placeholder="Ej: Presupuesto válido por 7 días. Incluye repuestos originales...">{{ vehicle.parts_needed or '' }}</textarea>
@@ -203,8 +250,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const itemsContainer = document.getElementById('itemsContainer');
     const btnAddItem = document.getElementById('btnAddItem');
-    const btnAddItemBottom = document.getElementById('btnAddItemBottom');
+    const btnAddLaborBottom = document.getElementById('btnAddLaborBottom');
+    const btnAddPartBottom = document.getElementById('btnAddPartBottom');
     const liveTotalAmount = document.getElementById('liveTotalAmount');
+    const liveLaborSubtotal = document.getElementById('liveLaborSubtotal');
+    const livePartsSubtotal = document.getElementById('livePartsSubtotal');
+    const liveDanielShare = document.getElementById('liveDanielShare');
+    const liveOwnerShare = document.getElementById('liveOwnerShare');
     const headerTotalBadge = document.getElementById('headerTotalBadge');
     const btnSharePdfNative = document.getElementById('btnSharePdfNative');
     const btnSendWhatsappText = document.getElementById('btnSendWhatsappText');
@@ -221,34 +273,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function calculateTotal() {
-        let total = 0;
-        const priceInputs = itemsContainer.querySelectorAll('.item-price-input');
-        priceInputs.forEach(input => {
-            const val = parseFloat(input.value);
+        let laborTotal = 0;
+        let partsTotal = 0;
+        const rows = itemsContainer.querySelectorAll('.item-row');
+        rows.forEach(row => {
+            const typeSelect = row.querySelector('.item-type-select');
+            const priceInput = row.querySelector('.item-price-input');
+            const val = parseFloat(priceInput ? priceInput.value : 0);
             if (!isNaN(val) && val > 0) {
-                total += val;
+                if (typeSelect && typeSelect.value === 'repuesto') {
+                    partsTotal += val;
+                } else {
+                    laborTotal += val;
+                }
             }
         });
-        const formatted = formatMoney(total);
-        liveTotalAmount.textContent = formatted;
+        const total = laborTotal + partsTotal;
+        const daniel = laborTotal * 0.70;
+        const owner = (laborTotal * 0.30) + partsTotal;
+
+        liveTotalAmount.textContent = formatMoney(total);
+        if (liveLaborSubtotal) liveLaborSubtotal.textContent = formatMoney(laborTotal);
+        if (livePartsSubtotal) livePartsSubtotal.textContent = formatMoney(partsTotal);
+        if (liveDanielShare) liveDanielShare.textContent = formatMoney(daniel);
+        if (liveOwnerShare) liveOwnerShare.textContent = formatMoney(owner);
         if (headerTotalBadge) {
-            headerTotalBadge.textContent = formatted;
+            headerTotalBadge.textContent = formatMoney(total);
         }
         return total;
     }
 
-    function createItemRow(desc = '', price = '') {
+    function createItemRow(itemType = 'mano_obra', desc = '', price = '') {
         const wrapper = document.createElement('div');
         wrapper.className = 'item-row p-2 bg-light rounded-3 border';
+        const isPart = itemType === 'repuesto';
+        const placeholderText = isPart ? 'Ej: Juego de pastillas de freno / Filtro...' : 'Ej: Mano de obra cambio de embrague...';
         wrapper.innerHTML = `
             <div class="row g-2 align-items-center">
-                <div class="col-12 col-sm-7">
-                    <label class="small text-muted d-sm-none fw-bold">Descripción del ítem o trabajo:</label>
+                <div class="col-12 col-sm-3">
+                    <label class="small text-muted d-sm-none fw-bold">Tipo:</label>
+                    <select name="item_type[]" class="form-select item-type-select fw-bold">
+                        <option value="mano_obra" ${!isPart ? 'selected' : ''}>🔧 Mano de Obra</option>
+                        <option value="repuesto" ${isPart ? 'selected' : ''}>📦 Repuesto</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-5">
+                    <label class="small text-muted d-sm-none fw-bold">Descripción:</label>
                     <input type="text" name="item_description[]" value="${desc}" 
                            class="form-control item-desc-input" 
-                           placeholder="Ej: Cambio de filtro y aceite / Mano de obra..." required>
+                           placeholder="${placeholderText}" required>
                 </div>
-                <div class="col-9 col-sm-4">
+                <div class="col-9 col-sm-3">
                     <label class="small text-muted d-sm-none fw-bold">Precio ($):</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white fw-bold">$</span>
@@ -267,19 +342,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return wrapper;
     }
 
-    function addRow() {
-        const newRow = createItemRow();
+    function addRow(defaultType = 'mano_obra') {
+        const newRow = createItemRow(defaultType);
         itemsContainer.appendChild(newRow);
         const descInput = newRow.querySelector('.item-desc-input');
         if (descInput) descInput.focus();
         calculateTotal();
     }
 
-    btnAddItem.addEventListener('click', addRow);
-    btnAddItemBottom.addEventListener('click', addRow);
+    btnAddItem.addEventListener('click', () => addRow('mano_obra'));
+    btnAddLaborBottom.addEventListener('click', () => addRow('mano_obra'));
+    btnAddPartBottom.addEventListener('click', () => addRow('repuesto'));
 
     itemsContainer.addEventListener('input', function(e) {
         if (e.target.classList.contains('item-price-input')) {
+            calculateTotal();
+        }
+    });
+
+    itemsContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('item-type-select')) {
             calculateTotal();
         }
     });
@@ -291,7 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (rows.length > 1) {
                 removeBtn.closest('.item-row').remove();
             } else {
-                // Si es la única fila, limpiar sus campos
                 const row = removeBtn.closest('.item-row');
                 row.querySelector('.item-desc-input').value = '';
                 row.querySelector('.item-price-input').value = '';
@@ -318,7 +399,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     files: [file]
                 });
             } else {
-                // En PC o navegadores sin soporte de compartir archivos nativos, descarga el PDF y abre WhatsApp
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
                 link.download = pdfFilename;
@@ -345,8 +425,10 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(row => {
             const desc = row.querySelector('.item-desc-input').value.trim();
             const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
+            const typeVal = row.querySelector('.item-type-select').value;
+            const tag = typeVal === 'repuesto' ? '[Repuesto]' : '[Mano de Obra]';
             if (desc) {
-                itemsLines.push(`• ${desc}: *${formatMoney(price)}*`);
+                itemsLines.push(`• ${tag} ${desc}: *${formatMoney(price)}*`);
             }
         });
 

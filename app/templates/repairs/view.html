@@ -127,13 +127,22 @@
                     <div class="bg-white rounded-3 border p-2 mb-2">
                         {% for item in vehicle.items %}
                             <div class="d-flex justify-content-between align-items-center py-1 {{ 'border-bottom' if not loop.last else '' }}">
-                                <span class="small text-dark">{{ loop.index }}. {{ item.description }}</span>
+                                <div class="small text-dark">
+                                    <span class="badge {{ 'bg-secondary' if item.item_type == 'repuesto' else 'bg-primary' }} me-1">
+                                        {{ 'Repuesto' if item.item_type == 'repuesto' else 'M. Obra' }}
+                                    </span>
+                                    {{ item.description }}
+                                </div>
                                 <span class="small fw-bold text-dark ms-2 text-nowrap">
                                     ${{ "{:,.0f}".format(item.price or 0)|replace(",", ".") }}
                                 </span>
                             </div>
                         {% endfor %}
-                        <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
+                        <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top small text-muted">
+                            <span>Mano de Obra: <strong>${{ "{:,.0f}".format(vehicle.labor_revenue)|replace(",", ".") }}</strong></span>
+                            <span>Repuestos: <strong>${{ "{:,.0f}".format(vehicle.parts_revenue)|replace(",", ".") }}</strong></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-1 mt-1 border-top">
                             <span class="fw-bold small text-uppercase text-dark">Total Proforma:</span>
                             <span class="fs-5 fw-bold" style="color: #c2410c;">
                                 ${{ "{:,.0f}".format(vehicle.items_total)|replace(",", ".") }}

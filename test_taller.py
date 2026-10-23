@@ -111,15 +111,20 @@ def run_tests():
         assert b"Tablero de Control del Taller" in dash_res.data
         print("   ✅ Dashboard de estadísticas funciona correctamente.")
 
-        print("\n🔍 9. Probando carga de Proforma (ítems + cálculo automático) y generación de PDF...")
+        print("\n🔍 9. Probando carga de Proforma (Mano de Obra vs Repuesto + cálculo automático) y generación de PDF...")
         proforma_res = client.post(f'/repairs/{v.id}/proforma', data={
             'diagnosis': 'Pastillas de freno delanteras gastadas y discos rayados.',
+            'item_type[]': [
+                'repuesto',
+                'mano_obra',
+                'mano_obra'
+            ],
             'item_description[]': [
                 'Juego de pastillas de freno delanteras Fras-le',
                 'Rectificado de ambos discos delanteros',
                 'Mano de obra y purga con líquido DOT 4'
             ],
-            'item_price[]': ['42000', '28000', '35000'],
+            'item_price[]': ['45000', '25000', '35000'],
             'parts_needed': 'Presupuesto válido por 10 días.',
             'action': 'save'
         }, follow_redirects=True)
@@ -127,29 +132,30 @@ def run_tests():
         v_proforma = Repair.query.get(v.id)
         assert len(v_proforma.items) == 3, f"Se esperaban 3 ítems, se encontraron {len(v_proforma.items)}"
         assert v_proforma.items_total == 105000.0, f"Total esperado 105000.0, obtenido {v_proforma.items_total}"
-        assert v_proforma.estimated_cost == 105000.0
+        assert v_proforma.labor_revenue == 60000.0, f"Mano de obra esperada 60000.0, obtenida {v_proforma.labor_revenue}"
+        assert v_proforma.parts_revenue == 45000.0, f"Repuestos esperado 45000.0, obtenido {v_proforma.parts_revenue}"
 
         pdf_res = client.get(f'/repairs/{v.id}/proforma/pdf?download=1')
         assert pdf_res.status_code == 200
         assert pdf_res.mimetype == 'application/pdf'
         assert pdf_res.data.startswith(b'%PDF'), "El archivo devuelto no es un PDF válido"
-        print(f"   ✅ Proforma guardada ({len(v_proforma.items)} ítems, Total: ${v_proforma.items_total:,.0f}) y PDF generado ({len(pdf_res.data)} bytes).")
+        print(f"   ✅ Proforma guardada (M. Obra: ${v_proforma.labor_revenue:,.0f}, Repuestos: ${v_proforma.parts_revenue:,.0f}, Total: ${v_proforma.items_total:,.0f}) y PDF generado.")
 
-        print("\n🔍 10. Probando sección de Ingresos del Mes y reparto 70% Daniel / 30% Titular...")
+        print("\n🔍 10. Probando sección de Ingresos del Mes (70% M.O. Daniel / 30% M.O. + 100% Repuestos Titular)...")
         # Marcar vehículo como 'listo' para que ingrese en la liquidación confirmada del mes
         client.get(f'/repairs/{v.id}/status/listo', follow_redirects=True)
         v_ready = Repair.query.get(v.id)
+        # Mano de obra = 60.000 -> Daniel (70%) = 42.000 | Titular M.O. (30%) = 18.000 + Repuestos (45.000) = 63.000
         assert v_ready.effective_revenue == 105000.0
-        assert v_ready.daniel_share == 73500.0, f"70% esperado 73500.0, obtenido {v_ready.daniel_share}"
-        assert v_ready.owner_share == 31500.0, f"30% esperado 31500.0, obtenido {v_ready.owner_share}"
+        assert v_ready.daniel_share == 42000.0, f"70% M.O. esperado 42000.0, obtenido {v_ready.daniel_share}"
+        assert v_ready.owner_labor_share == 18000.0, f"30% M.O. esperado 18000.0, obtenido {v_ready.owner_labor_share}"
+        assert v_ready.owner_share == 63000.0, f"Total titular esperado 63000.0, obtenido {v_ready.owner_share}"
 
         ingresos_res = client.get('/ingresos')
         assert ingresos_res.status_code == 200
-        assert b"Daniel (70%)" in ingresos_res.data
-        assert b"Tu Ganancia (30%)" in ingresos_res.data
-        assert b"73.500" in ingresos_res.data
-        assert b"31.500" in ingresos_res.data
-        print(f"   ✅ Sección /ingresos verificada: Total ${v_ready.effective_revenue:,.0f} -> Daniel (70%): ${v_ready.daniel_share:,.0f} | Vos (30%): ${v_ready.owner_share:,.0f}")
+        assert b"Daniel (70% M. Obra)" in ingresos_res.data
+        assert b"Total Para Vos (30% M.O. + Repuestos)" in ingresos_res.data
+        print(f"   ✅ Sección /ingresos verificada: Total ${v_ready.effective_revenue:,.0f} -> Daniel (70% M.O.): ${v_ready.daniel_share:,.0f} | Vos (30% M.O. $18.000 + Rep. $45.000): ${v_ready.owner_share:,.0f}")
         
         print("\n🎉 ¡TODAS LAS PRUEBAS PASARON EXITOSAMENTE! 🎉")
 

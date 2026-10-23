@@ -144,6 +144,14 @@ def generate_proforma_pdf(vehicle):
         leading=14,
         textColor=primary_dark
     )
+    item_type_style = ParagraphStyle(
+        'ItemType',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9.5,
+        leading=13,
+        textColor=muted_text
+    )
     item_price_style = ParagraphStyle(
         'ItemPrice',
         parent=styles['Normal'],
@@ -284,7 +292,8 @@ def generate_proforma_pdf(vehicle):
     items_rows = [
         [
             Paragraph("#", table_header_style),
-            Paragraph("Descripción del Ítem / Trabajo / Repuesto", table_header_style),
+            Paragraph("Tipo", table_header_style),
+            Paragraph("Descripción del Trabajo / Repuesto", table_header_style),
             Paragraph("Importe", table_header_right),
         ]
     ]
@@ -296,6 +305,7 @@ def generate_proforma_pdf(vehicle):
             total_amount += price_val
             items_rows.append([
                 Paragraph(str(idx), body_text_style),
+                Paragraph(item.type_label, item_type_style),
                 Paragraph(item.description, item_desc_style),
                 Paragraph(format_currency(price_val), item_price_style),
             ])
@@ -305,6 +315,7 @@ def generate_proforma_pdf(vehicle):
         total_amount = float(vehicle.estimated_cost or 0.0)
         items_rows.append([
             Paragraph("1", body_text_style),
+            Paragraph("Mano de Obra", item_type_style),
             Paragraph(fallback_desc.replace('\n', '<br/>'), item_desc_style),
             Paragraph(format_currency(total_amount), item_price_style),
         ])
@@ -312,11 +323,12 @@ def generate_proforma_pdf(vehicle):
     # Fila de Total General
     items_rows.append([
         Paragraph("", body_text_style),
+        Paragraph("", body_text_style),
         Paragraph("TOTAL PRESUPUESTADO:", total_label_style),
         Paragraph(format_currency(total_amount), total_value_style),
     ])
 
-    items_table = Table(items_rows, colWidths=[12 * mm, 124 * mm, 42 * mm], repeatRows=1)
+    items_table = Table(items_rows, colWidths=[12 * mm, 32 * mm, 94 * mm, 40 * mm], repeatRows=1)
 
     table_styles = [
         # Cabecera

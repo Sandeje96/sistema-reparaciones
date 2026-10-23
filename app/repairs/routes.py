@@ -273,15 +273,20 @@ def change_status(id, new_status):
 @bp.route('/<int:id>/proforma', methods=['GET', 'POST'])
 @login_required
 def proforma(id):
-    """Cargar o editar los ítems a reparar para la Proforma / Presupuesto del cliente."""
+    """Cargar o editar los ítems a reparar (Mano de Obra o Repuesto) para la Proforma / Presupuesto."""
     vehicle = Repair.query.get_or_404(id)
     
     if request.method == 'POST':
         descriptions = request.form.getlist('item_description[]')
         prices = request.form.getlist('item_price[]')
+        types = request.form.getlist('item_type[]')
         diagnosis_text = request.form.get('diagnosis', '').strip()
         notes_text = request.form.get('parts_needed', '').strip()
         
+        # Si types viene vacío o con menos elementos, rellenar con 'mano_obra'
+        while len(types) < len(descriptions):
+            types.append(RepairItem.TYPE_MANO_OBRA)
+            
         # Actualizar diagnóstico y observaciones si se modificaron desde esta pantalla
         if diagnosis_text:
             vehicle.diagnosis = diagnosis_text
@@ -297,7 +302,7 @@ def proforma(id):
         work_lines = []
         valid_idx = 0
         
-        for desc, raw_price in zip(descriptions, prices):
+        for desc, raw_price, raw_type in zip(descriptions, prices, types):
             clean_desc = (desc or '').strip()
             if not clean_desc:
                 continue
@@ -306,16 +311,20 @@ def proforma(id):
             except ValueError:
                 clean_price = 0.0
                 
+            item_type = raw_type if raw_type in (RepairItem.TYPE_MANO_OBRA, RepairItem.TYPE_REPUESTO) else RepairItem.TYPE_MANO_OBRA
+            
             valid_idx += 1
             item = RepairItem(
                 repair_id=vehicle.id,
+                item_type=item_type,
                 description=clean_desc,
                 price=max(0.0, clean_price),
                 order_index=valid_idx
             )
             db.session.add(item)
             total_cost += max(0.0, clean_price)
-            work_lines.append(f"• {clean_desc}")
+            type_prefix = "[Repuesto]" if item_type == RepairItem.TYPE_REPUESTO else "[Mano de Obra]"
+            work_lines.append(f"• {type_prefix} {clean_desc}")
             
         # Sincronizar presupuesto estimado y resumen de trabajo a realizar
         vehicle.estimated_cost = total_cost

@@ -176,23 +176,47 @@ class Repair(db.Model):
         return sum((item.price or 0.0) for item in self.items)
 
     @property
-    def effective_revenue(self):
-        """Monto efectivo del arreglo (costo final cobrado, o total de proforma, o presupuesto estimado)."""
+    def labor_revenue(self):
+        """
+        Suma total de Mano de Obra (sobre la cual se reparte 70% Daniel y 30% Titular).
+        Si no hay ítems en la proforma, toma el monto total estimado/final como mano de obra.
+        """
+        if self.items:
+            return float(sum((item.price or 0.0) for item in self.items if getattr(item, 'item_type', 'mano_obra') != 'repuesto'))
         if self.final_cost is not None and self.final_cost > 0:
             return float(self.final_cost)
-        if self.items_total > 0:
+        return float(self.estimated_cost or 0.0)
+
+    @property
+    def parts_revenue(self):
+        """Suma total de Repuestos (100% para el titular del taller)."""
+        if self.items:
+            return float(sum((item.price or 0.0) for item in self.items if getattr(item, 'item_type', 'mano_obra') == 'repuesto'))
+        return 0.0
+
+    @property
+    def effective_revenue(self):
+        """Monto total efectivo del arreglo (Mano de Obra + Repuestos)."""
+        if self.items:
             return float(self.items_total)
+        if self.final_cost is not None and self.final_cost > 0:
+            return float(self.final_cost)
         return float(self.estimated_cost or 0.0)
 
     @property
     def daniel_share(self):
-        """70% correspondiente al mecánico Daniel."""
-        return round(self.effective_revenue * 0.70, 2)
+        """70% de la Mano de Obra correspondiente al mecánico Daniel."""
+        return round(self.labor_revenue * 0.70, 2)
+
+    @property
+    def owner_labor_share(self):
+        """30% de la Mano de Obra correspondiente al titular del taller."""
+        return round(self.labor_revenue * 0.30, 2)
 
     @property
     def owner_share(self):
-        """30% correspondiente al titular del taller."""
-        return round(self.effective_revenue * 0.30, 2)
+        """Total correspondiente al titular del taller: 30% de Mano de Obra + 100% de Repuestos."""
+        return round(self.owner_labor_share + self.parts_revenue, 2)
 
     @property
     def revenue_reference_date(self):
@@ -223,12 +247,19 @@ class Repair(db.Model):
 class RepairItem(db.Model):
     """
     Ítem individual de presupuesto / proforma para una reparación.
-    Cada fila tiene una descripción (repuesto, mano de obra o tarea) y su precio.
+    Cada fila tiene:
+    - description: nombre del trabajo o repuesto
+    - item_type: 'mano_obra' (70% Daniel / 30% Titular) o 'repuesto' (100% Titular)
+    - price: importe del ítem
     """
     __tablename__ = 'repair_items'
     
+    TYPE_MANO_OBRA = 'mano_obra'
+    TYPE_REPUESTO = 'repuesto'
+    
     id = db.Column(db.Integer, primary_key=True)
     repair_id = db.Column(db.Integer, db.ForeignKey('repairs.id', ondelete='CASCADE'), nullable=False, index=True)
+    item_type = db.Column(db.String(20), nullable=False, default=TYPE_MANO_OBRA)  # 'mano_obra' o 'repuesto'
     description = db.Column(db.String(300), nullable=False)
     price = db.Column(db.Float, nullable=False, default=0.0)
     order_index = db.Column(db.Integer, nullable=False, default=0)
@@ -239,8 +270,13 @@ class RepairItem(db.Model):
         backref=db.backref('items', lazy=True, order_by='RepairItem.order_index, RepairItem.id', cascade='all, delete-orphan')
     )
     
+    @property
+    def type_label(self):
+        """Etiqueta legible del tipo de ítem."""
+        return 'Repuesto' if self.item_type == self.TYPE_REPUESTO else 'Mano de Obra'
+    
     def __repr__(self):
-        return f'<RepairItem {self.id}: {self.description} (${self.price})>'
+        return f'<RepairItem {self.id} [{self.item_type}]: {self.description} (${self.price})>'
 
 
 # Alias para mayor claridad semántica
