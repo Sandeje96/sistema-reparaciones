@@ -3,11 +3,18 @@
 {% block title %}Autos en el Taller{% endblock %}
 
 {% block content %}
-<!-- Botón Principal para Celular: Ingresar Auto -->
-<div class="mb-3">
-    <a href="{{ url_for('repairs.add') }}" class="btn btn-success btn-touch w-100 shadow-sm fs-5 fw-bold text-uppercase">
-        <i class="bi bi-plus-circle-fill me-2 fs-4"></i> Ingresar Auto al Taller
-    </a>
+<!-- Botones Principales para Celular: Ingresar Auto e Ingresos del Mes -->
+<div class="row g-2 mb-3">
+    <div class="col-12 col-sm-8">
+        <a href="{{ url_for('repairs.add') }}" class="btn btn-success btn-touch w-100 shadow-sm fs-5 fw-bold text-uppercase">
+            <i class="bi bi-plus-circle-fill me-2 fs-4"></i> Ingresar Auto al Taller
+        </a>
+    </div>
+    <div class="col-12 col-sm-4">
+        <a href="{{ url_for('main.ingresos') }}" class="btn btn-dark btn-touch w-100 shadow-sm fw-bold">
+            <i class="bi bi-cash-coin me-2 text-warning fs-5"></i> Ingresos (70/30)
+        </a>
+    </div>
 </div>
 
 <!-- Buscador Rápido -->

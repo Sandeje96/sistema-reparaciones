@@ -134,6 +134,22 @@ def run_tests():
         assert pdf_res.mimetype == 'application/pdf'
         assert pdf_res.data.startswith(b'%PDF'), "El archivo devuelto no es un PDF válido"
         print(f"   ✅ Proforma guardada ({len(v_proforma.items)} ítems, Total: ${v_proforma.items_total:,.0f}) y PDF generado ({len(pdf_res.data)} bytes).")
+
+        print("\n🔍 10. Probando sección de Ingresos del Mes y reparto 70% Daniel / 30% Titular...")
+        # Marcar vehículo como 'listo' para que ingrese en la liquidación confirmada del mes
+        client.get(f'/repairs/{v.id}/status/listo', follow_redirects=True)
+        v_ready = Repair.query.get(v.id)
+        assert v_ready.effective_revenue == 105000.0
+        assert v_ready.daniel_share == 73500.0, f"70% esperado 73500.0, obtenido {v_ready.daniel_share}"
+        assert v_ready.owner_share == 31500.0, f"30% esperado 31500.0, obtenido {v_ready.owner_share}"
+
+        ingresos_res = client.get('/ingresos')
+        assert ingresos_res.status_code == 200
+        assert b"Daniel (70%)" in ingresos_res.data
+        assert b"Tu Ganancia (30%)" in ingresos_res.data
+        assert b"73.500" in ingresos_res.data
+        assert b"31.500" in ingresos_res.data
+        print(f"   ✅ Sección /ingresos verificada: Total ${v_ready.effective_revenue:,.0f} -> Daniel (70%): ${v_ready.daniel_share:,.0f} | Vos (30%): ${v_ready.owner_share:,.0f}")
         
         print("\n🎉 ¡TODAS LAS PRUEBAS PASARON EXITOSAMENTE! 🎉")
 

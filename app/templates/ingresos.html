@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Ingresos del Mes y Reparto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+
+        <!-- Cabecera y Selector de Mes / Año -->
+        <div class="card app-card p-3 p-sm-4 mb-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-cash-coin text-success me-2"></i>Ingresos de {{ month_name }} {{ selected_year }}
+                    </h4>
+                    <div class="text-muted small">
+                        Acuerdo de reparto sobre arreglos: <strong>70% Daniel (Mecánico)</strong> • <strong>30% Titular (Vos)</strong>
+                    </div>
+                </div>
+
+                <!-- Filtro por Mes y Año -->
+                <form method="GET" action="{{ url_for('main.ingresos') }}" class="d-flex gap-2 align-items-center flex-wrap">
+                    <select name="month" class="form-select form-select-sm" style="width: auto; min-height: 40px;" onchange="this.form.submit()">
+                        {% for m_num, m_name in months_list.items() %}
+                            <option value="{{ m_num }}" {% if m_num == selected_month %}selected{% endif %}>{{ m_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="year" class="form-select form-select-sm" style="width: auto; min-height: 40px;" onchange="this.form.submit()">
+                        {% for y in available_years %}
+                            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-touch-sm px-3">
+                        <i class="bi bi-funnel-fill me-1"></i> Ver Mes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3 Tarjetas Principales: Total del Mes, 70% Daniel y 30% Vos -->
+        <div class="row g-3 mb-3">
+            <!-- 1. Total Ingresos Confirmados (100%) -->
+            <div class="col-12 col-md-4">
+                <div class="card app-card h-100 p-3 border-start border-4 border-dark">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase">Total Ingresos del Mes (100%)</div>
+                            <div class="fs-2 fw-bold text-dark mt-1">
+                                ${{ "{:,.0f}".format(summary.total_confirmed)|replace(",", ".") }}
+                            </div>
+                        </div>
+                        <span class="badge bg-dark rounded-pill fs-6">{{ summary.count_confirmed }} autos</span>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Autos marcados como <strong>Listos</strong> o <strong>Entregados</strong> en {{ month_name }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Parte de Daniel (70%) -->
+            <div class="col-12 col-md-4">
+                <div class="card app-card h-100 p-3 border-start border-4 border-primary" style="background-color: #f0f9ff;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-primary small fw-bold text-uppercase">
+                                <i class="bi bi-wrench-adjustable me-1"></i> Mecánico Daniel (70%)
+                            </div>
+                            <div class="fs-2 fw-bold text-primary mt-1">
+                                ${{ "{:,.0f}".format(summary.daniel_confirmed)|replace(",", ".") }}
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">70%</span>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Liquidación para Daniel por trabajos terminados
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Tu Parte (30%) -->
+            <div class="col-12 col-md-4">
+                <div class="card app-card h-100 p-3 border-start border-4 border-success" style="background-color: #f0fdf4;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-success small fw-bold text-uppercase">
+                                <i class="bi bi-wallet2 me-1"></i> Tu Ganancia (30%)
+                            </div>
+                            <div class="fs-2 fw-bold text-success mt-1">
+                                ${{ "{:,.0f}".format(summary.owner_confirmed)|replace(",", ".") }}
+                            </div>
+                        </div>
+                        <span class="badge bg-success rounded-pill">30%</span>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Tu porcentaje neto sobre los arreglos del mes
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listado Detallado de Arreglos Confirmados en el Mes (Listos / Entregados) -->
+        <div class="card app-card p-3 p-sm-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>Detalle de Arreglos Terminados en {{ month_name }} ({{ summary.count_confirmed }})
+                </h5>
+                <span class="small text-muted">Estados: Listo para entregar / Entregado</span>
+            </div>
+
+            {% if confirmed_repairs %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Vehículo / Cliente</th>
+                                <th>Estado</th>
+                                <th class="text-end">Total Arreglo (100%)</th>
+                                <th class="text-end text-primary">Daniel (70%)</th>
+                                <th class="text-end text-success">Tu Parte (30%)</th>
+                                <th class="text-end">Ficha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in confirmed_repairs %}
+                                <tr>
+                                    <td class="small text-muted text-nowrap">
+                                        {{ v.revenue_reference_date.strftime('%d/%m/%Y') if v.revenue_reference_date else '-' }}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <a href="{{ url_for('repairs.view', id=v.id) }}" class="text-decoration-none">
+                                                <span class="license-plate-badge plate-sm">{{ v.formatted_plate }}</span>
+                                            </a>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ v.brand }} {{ v.model }}</div>
+                                                <div class="small text-muted">{{ v.client_name }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="{{ v.get_status_badge_class() }} small">
+                                            {{ v.get_status_display() }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-bold fs-6 text-dark text-nowrap">
+                                        ${{ "{:,.0f}".format(v.effective_revenue)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end fw-bold text-primary text-nowrap">
+                                        ${{ "{:,.0f}".format(v.daniel_share)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end fw-bold text-success text-nowrap">
+                                        ${{ "{:,.0f}".format(v.owner_share)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <a href="{{ url_for('repairs.proforma', id=v.id) }}" class="btn btn-sm btn-warning fw-bold" title="Ver Proforma">
+                                            <i class="bi bi-receipt"></i>
+                                        </a>
+                                        <a href="{{ url_for('repairs.view', id=v.id) }}" class="btn btn-sm btn-outline-dark" title="Ver Ficha">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light fw-bold border-top-2">
+                            <tr>
+                                <td colspan="3" class="text-end text-uppercase">Totales de {{ month_name }}:</td>
+                                <td class="text-end fs-5 text-dark text-nowrap">
+                                    ${{ "{:,.0f}".format(summary.total_confirmed)|replace(",", ".") }}
+                                </td>
+                                <td class="text-end fs-5 text-primary text-nowrap">
+                                    ${{ "{:,.0f}".format(summary.daniel_confirmed)|replace(",", ".") }}
+                                </td>
+                                <td class="text-end fs-5 text-success text-nowrap">
+                                    ${{ "{:,.0f}".format(summary.owner_confirmed)|replace(",", ".") }}
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                    No hay vehículos marcados como <strong>Listos</strong> o <strong>Entregados</strong> en {{ month_name }} {{ selected_year }}.
+                    <div class="small mt-1">
+                        Cuando marques un auto como "Listo para entregar" o "Entregado", sumará automáticamente acá.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sección Secundaria: Autos en Taller (Pendientes de terminar / cobrar) -->
+        <div class="card app-card p-3 p-sm-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-hourglass-split text-warning me-2"></i>En Taller / Pendientes de Cobro ({{ summary.count_pending }})
+                    </h5>
+                    <div class="small text-muted">
+                        Vehículos que siguen en reparación o diagnóstico (pasarán a ingresos confirmados al marcarse como Listos o Entregados)
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-warning text-dark fs-6">
+                        Total en curso: ${{ "{:,.0f}".format(summary.total_pending)|replace(",", ".") }}
+                    </span>
+                </div>
+            </div>
+
+            {% if pending_repairs %}
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-light border text-center">
+                            <span class="small text-muted d-block">Proyección Daniel (70%) en taller:</span>
+                            <strong class="text-primary fs-6">${{ "{:,.0f}".format(summary.daniel_pending)|replace(",", ".") }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-light border text-center">
+                            <span class="small text-muted d-block">Proyección Tu Parte (30%) en taller:</span>
+                            <strong class="text-success fs-6">${{ "{:,.0f}".format(summary.owner_pending)|replace(",", ".") }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th>Ingreso</th>
+                                <th>Vehículo / Cliente</th>
+                                <th>Estado Actual</th>
+                                <th class="text-end">Presupuesto</th>
+                                <th class="text-end text-primary">Daniel (70%)</th>
+                                <th class="text-end text-success">Tu Parte (30%)</th>
+                                <th class="text-end">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in pending_repairs %}
+                                <tr>
+                                    <td class="small text-muted text-nowrap">
+                                        {{ v.entry_date.strftime('%d/%m/%Y') if v.entry_date else '-' }}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <a href="{{ url_for('repairs.view', id=v.id) }}" class="text-decoration-none">
+                                                <span class="license-plate-badge plate-sm">{{ v.formatted_plate }}</span>
+                                            </a>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ v.brand }} {{ v.model }}</div>
+                                                <div class="small text-muted">{{ v.client_name }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="{{ v.get_status_badge_class() }} small">
+                                            {{ v.get_status_display() }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-bold text-dark text-nowrap">
+                                        {% if v.effective_revenue > 0 %}
+                                            ${{ "{:,.0f}".format(v.effective_revenue)|replace(",", ".") }}
+                                        {% else %}
+                                            <span class="text-muted small">Sin monto</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end text-primary text-nowrap">
+                                        ${{ "{:,.0f}".format(v.daniel_share)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end text-success text-nowrap">
+                                        ${{ "{:,.0f}".format(v.owner_share)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <a href="{{ url_for('repairs.proforma', id=v.id) }}" class="btn btn-sm btn-outline-warning text-dark fw-bold" title="Cargar/Editar Proforma">
+                                            <i class="bi bi-receipt"></i> Proforma
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-3 text-muted small">
+                    No hay vehículos con presupuesto pendiente en el taller.
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

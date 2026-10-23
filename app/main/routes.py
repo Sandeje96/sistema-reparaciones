@@ -4,11 +4,27 @@ Rutas principales del sistema Taller Mecánico Don Orlando.
 """
 
 from datetime import datetime, timedelta
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 from app.main import bp
 from app.models import Repair
 from app import db
+
+
+MESES_ES = {
+    1: 'Enero',
+    2: 'Febrero',
+    3: 'Marzo',
+    4: 'Abril',
+    5: 'Mayo',
+    6: 'Junio',
+    7: 'Julio',
+    8: 'Agosto',
+    9: 'Septiembre',
+    10: 'Octubre',
+    11: 'Noviembre',
+    12: 'Diciembre'
+}
 
 
 @bp.route('/')
@@ -59,3 +75,74 @@ def dashboard():
     }
     
     return render_template('dashboard.html', stats=stats)
+
+
+@bp.route('/ingresos')
+@login_required
+def ingresos():
+    """
+    Sección de ingresos mensuales y liquidación de comisiones:
+    - Daniel (Mecánico): 70% de los arreglos
+    - Titular (Vos): 30% de los arreglos
+    """
+    now = datetime.utcnow()
+    selected_year = request.args.get('year', now.year, type=int)
+    selected_month = request.args.get('month', now.month, type=int)
+    
+    if selected_month < 1 or selected_month > 12:
+        selected_month = now.month
+        
+    all_repairs = Repair.query.order_by(Repair.entry_date.desc()).all()
+    
+    # Confirmados del mes: vehículos en estado 'listo' o 'entregado' cuya fecha de referencia cae en el mes/año elegido
+    confirmed_repairs = []
+    # En taller / pendientes de cobro (aún no están listos ni entregados, pero tienen presupuesto/proforma)
+    pending_repairs = []
+    
+    # Para selector de años disponibles
+    years_set = {now.year}
+    
+    for r in all_repairs:
+        ref_date = r.revenue_reference_date
+        if ref_date:
+            years_set.add(ref_date.year)
+            
+        if r.status in (Repair.STATUS_LISTO, Repair.STATUS_ENTREGADO):
+            if ref_date and ref_date.year == selected_year and ref_date.month == selected_month:
+                confirmed_repairs.append(r)
+        else:
+            # Autos activos en taller en proceso
+            if r.effective_revenue > 0 or (ref_date and ref_date.year == selected_year and ref_date.month == selected_month):
+                pending_repairs.append(r)
+                
+    total_confirmed = sum(r.effective_revenue for r in confirmed_repairs)
+    daniel_confirmed = round(total_confirmed * 0.70, 2)
+    owner_confirmed = round(total_confirmed * 0.30, 2)
+    
+    total_pending = sum(r.effective_revenue for r in pending_repairs)
+    daniel_pending = round(total_pending * 0.70, 2)
+    owner_pending = round(total_pending * 0.30, 2)
+    
+    available_years = sorted(years_set, reverse=True)
+    month_name = MESES_ES.get(selected_month, '')
+    
+    return render_template(
+        'ingresos.html',
+        selected_year=selected_year,
+        selected_month=selected_month,
+        month_name=month_name,
+        months_list=MESES_ES,
+        available_years=available_years,
+        confirmed_repairs=confirmed_repairs,
+        pending_repairs=pending_repairs,
+        summary={
+            'total_confirmed': total_confirmed,
+            'daniel_confirmed': daniel_confirmed,
+            'owner_confirmed': owner_confirmed,
+            'count_confirmed': len(confirmed_repairs),
+            'total_pending': total_pending,
+            'daniel_pending': daniel_pending,
+            'owner_pending': owner_pending,
+            'count_pending': len(pending_repairs)
+        }
+    )

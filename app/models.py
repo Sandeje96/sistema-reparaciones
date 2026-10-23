@@ -174,6 +174,34 @@ class Repair(db.Model):
     def items_total(self):
         """Suma total de todos los ítems de la proforma/presupuesto."""
         return sum((item.price or 0.0) for item in self.items)
+
+    @property
+    def effective_revenue(self):
+        """Monto efectivo del arreglo (costo final cobrado, o total de proforma, o presupuesto estimado)."""
+        if self.final_cost is not None and self.final_cost > 0:
+            return float(self.final_cost)
+        if self.items_total > 0:
+            return float(self.items_total)
+        return float(self.estimated_cost or 0.0)
+
+    @property
+    def daniel_share(self):
+        """70% correspondiente al mecánico Daniel."""
+        return round(self.effective_revenue * 0.70, 2)
+
+    @property
+    def owner_share(self):
+        """30% correspondiente al titular del taller."""
+        return round(self.effective_revenue * 0.30, 2)
+
+    @property
+    def revenue_reference_date(self):
+        """Fecha de referencia para imputar el ingreso en el mes."""
+        if self.status == self.STATUS_ENTREGADO and self.delivery_date:
+            return self.delivery_date
+        if self.status in (self.STATUS_LISTO, self.STATUS_ENTREGADO) and self.completion_date:
+            return self.completion_date
+        return self.entry_date or self.created_at
         
     @property
     def clean_whatsapp_phone(self):
