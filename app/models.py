@@ -189,7 +189,7 @@ class Repair(db.Model):
 
     @property
     def parts_revenue(self):
-        """Suma total de Repuestos (100% para el titular del taller)."""
+        """Suma total de Repuestos (columna informativa separada, no entra en el reparto 70/30)."""
         if self.items:
             return float(sum((item.price or 0.0) for item in self.items if getattr(item, 'item_type', 'mano_obra') == 'repuesto'))
         return 0.0
@@ -215,8 +215,8 @@ class Repair(db.Model):
 
     @property
     def owner_share(self):
-        """Total correspondiente al titular del taller: 30% de Mano de Obra + 100% de Repuestos."""
-        return round(self.owner_labor_share + self.parts_revenue, 2)
+        """30% de la Mano de Obra correspondiente al titular del taller (los repuestos van en columna separada)."""
+        return self.owner_labor_share
 
     @property
     def revenue_reference_date(self):
@@ -249,7 +249,7 @@ class RepairItem(db.Model):
     Ítem individual de presupuesto / proforma para una reparación.
     Cada fila tiene:
     - description: nombre del trabajo o repuesto
-    - item_type: 'mano_obra' (70% Daniel / 30% Titular) o 'repuesto' (100% Titular)
+    - item_type: 'mano_obra' (se reparte 70% Daniel / 30% Titular) o 'repuesto' (columna informativa separada)
     - price: importe del ítem
     """
     __tablename__ = 'repair_items'

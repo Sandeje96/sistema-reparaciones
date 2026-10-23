@@ -1,100 +1,127 @@
 {% extends "base.html" %}
 
-{% block title %}Ingresos del Mes y Reparto{% endblock %}
+{% block title %}Ingresos del Mes y Rendición{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-12 col-lg-11">
 
-        <!-- Cabecera y Selector de Mes / Año -->
+        <!-- Cabecera, Selector de Mes/Año y Botones de Comprobante PDF para Firmar -->
         <div class="card app-card p-3 p-sm-4 mb-3">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h4 class="fw-bold mb-1 text-dark">
-                        <i class="bi bi-cash-coin text-success me-2"></i>Ingresos de {{ month_name }} {{ selected_year }}
+                        <i class="bi bi-cash-coin text-success me-2"></i>Liquidación de {{ month_name }} {{ selected_year }}
                     </h4>
                     <div class="text-muted small">
-                        Acuerdo: <strong>Mano de Obra</strong> se divide <strong>70% Daniel</strong> y <strong>30% Vos</strong> • <strong>Repuestos: 100% para Vos</strong>
+                        Se reparte <strong>únicamente la Mano de Obra</strong>: <strong>70% Daniel</strong> y <strong>30% Vos</strong> • <strong>Repuestos en columna aparte</strong>
                     </div>
                 </div>
 
-                <!-- Filtro por Mes y Año -->
-                <form method="GET" action="{{ url_for('main.ingresos') }}" class="d-flex gap-2 align-items-center flex-wrap">
-                    <select name="month" class="form-select form-select-sm" style="width: auto; min-height: 40px;" onchange="this.form.submit()">
-                        {% for m_num, m_name in months_list.items() %}
-                            <option value="{{ m_num }}" {% if m_num == selected_month %}selected{% endif %}>{{ m_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <select name="year" class="form-select form-select-sm" style="width: auto; min-height: 40px;" onchange="this.form.submit()">
-                        {% for y in available_years %}
-                            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-primary btn-touch-sm px-3">
-                        <i class="bi bi-funnel-fill me-1"></i> Ver Mes
-                    </button>
-                </form>
+                <!-- Filtro por Mes y Año + Descarga de PDF de Rendición -->
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <form method="GET" action="{{ url_for('main.ingresos') }}" class="d-flex gap-2 align-items-center flex-wrap">
+                        <select name="month" class="form-select form-select-sm" style="width: auto; min-height: 40px;" onchange="this.form.submit()">
+                            {% for m_num, m_name in months_list.items() %}
+                                <option value="{{ m_num }}" {% if m_num == selected_month %}selected{% endif %}>{{ m_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="year" class="form-select form-select-sm" style="width: auto; min-height: 40px;" onchange="this.form.submit()">
+                            {% for y in available_years %}
+                                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+
+                    <!-- Botones para imprimir / descargar el PDF de Rendición con firma -->
+                    <a href="{{ url_for('main.ingresos_pdf', year=selected_year, month=selected_month, download=1) }}" 
+                       class="btn btn-dark btn-touch-sm fw-bold shadow-sm">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> Descargar PDF para Firmar
+                    </a>
+                    <a href="{{ url_for('main.ingresos_pdf', year=selected_year, month=selected_month, download=0) }}" 
+                       target="_blank" class="btn btn-outline-secondary btn-touch-sm fw-bold bg-white" title="Ver e Imprimir PDF">
+                        <i class="bi bi-printer me-1"></i> Imprimir
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- 3 Tarjetas Principales: Facturación Total, Parte de Daniel (70% M.O.) y Tu Total (30% M.O. + 100% Repuestos) -->
+        <!-- 4 Tarjetas Claras: 1) Mano de Obra 100%, 2) 70% Daniel, 3) 30% Vos, 4) Repuestos (Columna Aparte) -->
         <div class="row g-3 mb-3">
-            <!-- 1. Total Facturado del Mes -->
-            <div class="col-12 col-md-4">
+            <!-- 1. Total Mano de Obra (100% a repartir) -->
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card app-card h-100 p-3 border-start border-4 border-dark">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="text-muted small fw-bold text-uppercase">Total Cobrado en {{ month_name }}</div>
-                            <div class="fs-2 fw-bold text-dark mt-1">
-                                ${{ "{:,.0f}".format(summary.total_confirmed)|replace(",", ".") }}
+                            <div class="text-muted small fw-bold text-uppercase">Mano de Obra (100%)</div>
+                            <div class="fs-3 fw-bold text-dark mt-1">
+                                ${{ "{:,.0f}".format(summary.labor_confirmed)|replace(",", ".") }}
                             </div>
                         </div>
-                        <span class="badge bg-dark rounded-pill fs-6">{{ summary.count_confirmed }} autos</span>
+                        <span class="badge bg-dark rounded-pill">{{ summary.count_confirmed }} autos</span>
                     </div>
-                    <div class="small text-muted mt-2 pt-2 border-top d-flex justify-content-between">
-                        <span>🔧 M. Obra: <strong>${{ "{:,.0f}".format(summary.labor_confirmed)|replace(",", ".") }}</strong></span>
-                        <span>📦 Repuestos: <strong>${{ "{:,.0f}".format(summary.parts_confirmed)|replace(",", ".") }}</strong></span>
+                    <div class="small text-muted mt-2 pt-2 border-top">
+                        Total de mano de obra a repartir (70% / 30%)
                     </div>
                 </div>
             </div>
 
             <!-- 2. Parte de Daniel (70% de Mano de Obra) -->
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card app-card h-100 p-3 border-start border-4 border-primary" style="background-color: #f0f9ff;">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-primary small fw-bold text-uppercase">
-                                <i class="bi bi-wrench-adjustable me-1"></i> Mecánico Daniel (70% M. Obra)
+                                <i class="bi bi-wrench-adjustable me-1"></i> Daniel (70% M. Obra)
                             </div>
-                            <div class="fs-2 fw-bold text-primary mt-1">
+                            <div class="fs-3 fw-bold text-primary mt-1">
                                 ${{ "{:,.0f}".format(summary.daniel_confirmed)|replace(",", ".") }}
                             </div>
                         </div>
-                        <span class="badge bg-primary rounded-pill">70% M.O.</span>
+                        <span class="badge bg-primary rounded-pill">70%</span>
                     </div>
                     <div class="small text-muted mt-2 pt-2 border-top">
-                        70% sobre <strong>${{ "{:,.0f}".format(summary.labor_confirmed)|replace(",", ".") }}</strong> de mano de obra (sin repuestos)
+                        Liquidación para Daniel sobre mano de obra
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Tu Parte Total (30% de Mano de Obra + 100% de Repuestos) -->
-            <div class="col-12 col-md-4">
+            <!-- 3. Tu Parte (30% de Mano de Obra) -->
+            <div class="col-12 col-sm-6 col-xl-3">
                 <div class="card app-card h-100 p-3 border-start border-4 border-success" style="background-color: #f0fdf4;">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-success small fw-bold text-uppercase">
-                                <i class="bi bi-wallet2 me-1"></i> Total Para Vos (30% M.O. + Repuestos)
+                                <i class="bi bi-wallet2 me-1"></i> Tu Parte (30% M. Obra)
                             </div>
-                            <div class="fs-2 fw-bold text-success mt-1">
-                                ${{ "{:,.0f}".format(summary.owner_confirmed)|replace(",", ".") }}
+                            <div class="fs-3 fw-bold text-success mt-1">
+                                ${{ "{:,.0f}".format(summary.owner_labor_confirmed)|replace(",", ".") }}
                             </div>
                         </div>
-                        <span class="badge bg-success rounded-pill">Tuyo</span>
+                        <span class="badge bg-success rounded-pill">30%</span>
                     </div>
-                    <div class="small text-muted mt-2 pt-2 border-top d-flex justify-content-between">
-                        <span>30% M.O.: <strong>${{ "{:,.0f}".format(summary.owner_labor_confirmed)|replace(",", ".") }}</strong></span>
-                        <span>100% Rep.: <strong>${{ "{:,.0f}".format(summary.parts_confirmed)|replace(",", ".") }}</strong></span>
+                    <div class="small text-muted mt-2 pt-2 border-top">
+                        Tu 30% limpio sobre la mano de obra
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Repuestos (Columna Aparte - No se reparte) -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card app-card h-100 p-3 border-start border-4 border-secondary bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-secondary small fw-bold text-uppercase">
+                                <i class="bi bi-box-seam me-1"></i> Repuestos (Aparte)
+                            </div>
+                            <div class="fs-3 fw-bold text-secondary mt-1">
+                                ${{ "{:,.0f}".format(summary.parts_confirmed)|replace(",", ".") }}
+                            </div>
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">Separado</span>
+                    </div>
+                    <div class="small text-muted mt-2 pt-2 border-top">
+                        Registrado aparte (Total facturado: ${{ "{:,.0f}".format(summary.total_confirmed)|replace(",", ".") }})
                     </div>
                 </div>
             </div>
@@ -104,9 +131,12 @@
         <div class="card app-card p-3 p-sm-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
                 <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-check-circle-fill text-success me-2"></i>Detalle de Arreglos Terminados en {{ month_name }} ({{ summary.count_confirmed }})
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>Detalle de Arreglos Liquidados en {{ month_name }} ({{ summary.count_confirmed }})
                 </h5>
-                <span class="small text-muted">Estados: Listo para entregar / Entregado</span>
+                <a href="{{ url_for('main.ingresos_pdf', year=selected_year, month=selected_month, download=1) }}" 
+                   class="btn btn-sm btn-outline-dark fw-bold">
+                    <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Exportar Comprobante con Firma (PDF)
+                </a>
             </div>
 
             {% if confirmed_repairs %}
@@ -116,11 +146,10 @@
                             <tr>
                                 <th>Fecha</th>
                                 <th>Vehículo / Cliente</th>
-                                <th class="text-end">Mano de Obra</th>
-                                <th class="text-end">Repuestos (Vos)</th>
-                                <th class="text-end">Total Cobrado</th>
+                                <th class="text-end">Mano de Obra (100%)</th>
                                 <th class="text-end text-primary">Daniel (70% M.O.)</th>
-                                <th class="text-end text-success">Para Vos (30% M.O. + Rep.)</th>
+                                <th class="text-end text-success">Tu Parte (30% M.O.)</th>
+                                <th class="text-end text-secondary" style="background-color: #f8fafc;">📦 Repuestos (Aparte)</th>
                                 <th class="text-end">Acción</th>
                             </tr>
                         </thead>
@@ -141,23 +170,17 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-end text-dark text-nowrap">
-                                        ${{ "{:,.0f}".format(v.labor_revenue)|replace(",", ".") }}
-                                    </td>
-                                    <td class="text-end text-muted text-nowrap">
-                                        ${{ "{:,.0f}".format(v.parts_revenue)|replace(",", ".") }}
-                                    </td>
                                     <td class="text-end fw-bold text-dark text-nowrap">
-                                        ${{ "{:,.0f}".format(v.effective_revenue)|replace(",", ".") }}
+                                        ${{ "{:,.0f}".format(v.labor_revenue)|replace(",", ".") }}
                                     </td>
                                     <td class="text-end fw-bold text-primary text-nowrap">
                                         ${{ "{:,.0f}".format(v.daniel_share)|replace(",", ".") }}
                                     </td>
                                     <td class="text-end fw-bold text-success text-nowrap">
-                                        ${{ "{:,.0f}".format(v.owner_share)|replace(",", ".") }}
-                                        <div class="small text-muted fw-normal" style="font-size: 0.75rem;">
-                                            M.O: ${{ "{:,.0f}".format(v.owner_labor_share)|replace(",", ".") }} + Rep: ${{ "{:,.0f}".format(v.parts_revenue)|replace(",", ".") }}
-                                        </div>
+                                        ${{ "{:,.0f}".format(v.owner_labor_share)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end text-secondary text-nowrap" style="background-color: #f8fafc;">
+                                        ${{ "{:,.0f}".format(v.parts_revenue)|replace(",", ".") }}
                                     </td>
                                     <td class="text-end text-nowrap">
                                         <a href="{{ url_for('repairs.proforma', id=v.id) }}" class="btn btn-sm btn-warning fw-bold" title="Ver/Editar Proforma">
@@ -173,20 +196,17 @@
                         <tfoot class="table-light fw-bold border-top-2">
                             <tr>
                                 <td colspan="2" class="text-end text-uppercase">Totales de {{ month_name }}:</td>
-                                <td class="text-end text-dark text-nowrap">
-                                    ${{ "{:,.0f}".format(summary.labor_confirmed)|replace(",", ".") }}
-                                </td>
-                                <td class="text-end text-dark text-nowrap">
-                                    ${{ "{:,.0f}".format(summary.parts_confirmed)|replace(",", ".") }}
-                                </td>
                                 <td class="text-end fs-6 text-dark text-nowrap">
-                                    ${{ "{:,.0f}".format(summary.total_confirmed)|replace(",", ".") }}
+                                    ${{ "{:,.0f}".format(summary.labor_confirmed)|replace(",", ".") }}
                                 </td>
                                 <td class="text-end fs-5 text-primary text-nowrap">
                                     ${{ "{:,.0f}".format(summary.daniel_confirmed)|replace(",", ".") }}
                                 </td>
                                 <td class="text-end fs-5 text-success text-nowrap">
-                                    ${{ "{:,.0f}".format(summary.owner_confirmed)|replace(",", ".") }}
+                                    ${{ "{:,.0f}".format(summary.owner_labor_confirmed)|replace(",", ".") }}
+                                </td>
+                                <td class="text-end fs-6 text-secondary text-nowrap" style="background-color: #f1f5f9;">
+                                    ${{ "{:,.0f}".format(summary.parts_confirmed)|replace(",", ".") }}
                                 </td>
                                 <td></td>
                             </tr>
@@ -217,23 +237,29 @@
                 </div>
                 <div class="text-end">
                     <span class="badge bg-warning text-dark fs-6">
-                        Total en curso: ${{ "{:,.0f}".format(summary.total_pending)|replace(",", ".") }}
+                        Mano de Obra en curso: ${{ "{:,.0f}".format(summary.labor_pending)|replace(",", ".") }}
                     </span>
                 </div>
             </div>
 
             {% if pending_repairs %}
                 <div class="row g-2 mb-3">
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="p-2 rounded bg-light border text-center">
-                            <span class="small text-muted d-block">Proyección Daniel (70% M.O.):</span>
+                            <span class="small text-muted d-block">Daniel (70% M.O.):</span>
                             <strong class="text-primary fs-6">${{ "{:,.0f}".format(summary.daniel_pending)|replace(",", ".") }}</strong>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="p-2 rounded bg-light border text-center">
-                            <span class="small text-muted d-block">Proyección Para Vos (30% M.O. + Rep.):</span>
-                            <strong class="text-success fs-6">${{ "{:,.0f}".format(summary.owner_pending)|replace(",", ".") }}</strong>
+                            <span class="small text-muted d-block">Tu Parte (30% M.O.):</span>
+                            <strong class="text-success fs-6">${{ "{:,.0f}".format(summary.owner_labor_pending)|replace(",", ".") }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 rounded bg-light border text-center">
+                            <span class="small text-muted d-block">Repuestos (Aparte):</span>
+                            <strong class="text-secondary fs-6">${{ "{:,.0f}".format(summary.parts_pending)|replace(",", ".") }}</strong>
                         </div>
                     </div>
                 </div>
@@ -246,9 +272,9 @@
                                 <th>Vehículo / Cliente</th>
                                 <th>Estado</th>
                                 <th class="text-end">Mano de Obra</th>
-                                <th class="text-end">Repuestos</th>
-                                <th class="text-end text-primary">Daniel (70% M.O.)</th>
-                                <th class="text-end text-success">Para Vos (30% M.O. + Rep.)</th>
+                                <th class="text-end text-primary">Daniel (70%)</th>
+                                <th class="text-end text-success">Tu Parte (30%)</th>
+                                <th class="text-end text-secondary">📦 Repuestos (Aparte)</th>
                                 <th class="text-end">Acción</th>
                             </tr>
                         </thead>
@@ -277,14 +303,14 @@
                                     <td class="text-end text-dark text-nowrap">
                                         ${{ "{:,.0f}".format(v.labor_revenue)|replace(",", ".") }}
                                     </td>
-                                    <td class="text-end text-muted text-nowrap">
-                                        ${{ "{:,.0f}".format(v.parts_revenue)|replace(",", ".") }}
-                                    </td>
                                     <td class="text-end text-primary fw-bold text-nowrap">
                                         ${{ "{:,.0f}".format(v.daniel_share)|replace(",", ".") }}
                                     </td>
                                     <td class="text-end text-success fw-bold text-nowrap">
-                                        ${{ "{:,.0f}".format(v.owner_share)|replace(",", ".") }}
+                                        ${{ "{:,.0f}".format(v.owner_labor_share)|replace(",", ".") }}
+                                    </td>
+                                    <td class="text-end text-secondary text-nowrap">
+                                        ${{ "{:,.0f}".format(v.parts_revenue)|replace(",", ".") }}
                                     </td>
                                     <td class="text-end text-nowrap">
                                         <a href="{{ url_for('repairs.proforma', id=v.id) }}" class="btn btn-sm btn-outline-warning text-dark fw-bold" title="Cargar/Editar Proforma">

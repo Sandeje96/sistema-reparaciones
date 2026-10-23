@@ -141,21 +141,28 @@ def run_tests():
         assert pdf_res.data.startswith(b'%PDF'), "El archivo devuelto no es un PDF válido"
         print(f"   ✅ Proforma guardada (M. Obra: ${v_proforma.labor_revenue:,.0f}, Repuestos: ${v_proforma.parts_revenue:,.0f}, Total: ${v_proforma.items_total:,.0f}) y PDF generado.")
 
-        print("\n🔍 10. Probando sección de Ingresos del Mes (70% M.O. Daniel / 30% M.O. + 100% Repuestos Titular)...")
+        print("\n🔍 10. Probando sección de Ingresos del Mes (70% M.O. Daniel / 30% M.O. Titular + Repuestos en columna aparte) y PDF de Rendición...")
         # Marcar vehículo como 'listo' para que ingrese en la liquidación confirmada del mes
         client.get(f'/repairs/{v.id}/status/listo', follow_redirects=True)
         v_ready = Repair.query.get(v.id)
-        # Mano de obra = 60.000 -> Daniel (70%) = 42.000 | Titular M.O. (30%) = 18.000 + Repuestos (45.000) = 63.000
+        # Mano de obra = 60.000 -> Daniel (70%) = 42.000 | Titular M.O. (30%) = 18.000 | Repuestos (columna aparte) = 45.000
         assert v_ready.effective_revenue == 105000.0
         assert v_ready.daniel_share == 42000.0, f"70% M.O. esperado 42000.0, obtenido {v_ready.daniel_share}"
         assert v_ready.owner_labor_share == 18000.0, f"30% M.O. esperado 18000.0, obtenido {v_ready.owner_labor_share}"
-        assert v_ready.owner_share == 63000.0, f"Total titular esperado 63000.0, obtenido {v_ready.owner_share}"
+        assert v_ready.owner_share == 18000.0, f"30% M.O. titular esperado 18000.0, obtenido {v_ready.owner_share}"
+        assert v_ready.parts_revenue == 45000.0, f"Repuestos aparte esperado 45000.0, obtenido {v_ready.parts_revenue}"
 
         ingresos_res = client.get('/ingresos')
         assert ingresos_res.status_code == 200
         assert b"Daniel (70% M. Obra)" in ingresos_res.data
-        assert b"Total Para Vos (30% M.O. + Repuestos)" in ingresos_res.data
-        print(f"   ✅ Sección /ingresos verificada: Total ${v_ready.effective_revenue:,.0f} -> Daniel (70% M.O.): ${v_ready.daniel_share:,.0f} | Vos (30% M.O. $18.000 + Rep. $45.000): ${v_ready.owner_share:,.0f}")
+        assert b"Tu Parte (30% M. Obra)" in ingresos_res.data
+        assert b"Repuestos (Aparte)" in ingresos_res.data
+
+        liq_pdf_res = client.get('/ingresos/pdf?download=1')
+        assert liq_pdf_res.status_code == 200
+        assert liq_pdf_res.mimetype == 'application/pdf'
+        assert liq_pdf_res.data.startswith(b'%PDF'), "El PDF de liquidación no es válido"
+        print(f"   ✅ Sección /ingresos y PDF con firmas verificados: M.O. ${v_ready.labor_revenue:,.0f} -> Daniel (70%): ${v_ready.daniel_share:,.0f} | Vos (30%): ${v_ready.owner_labor_share:,.0f} | Repuestos (Aparte): ${v_ready.parts_revenue:,.0f}")
         
         print("\n🎉 ¡TODAS LAS PRUEBAS PASARON EXITOSAMENTE! 🎉")
 
